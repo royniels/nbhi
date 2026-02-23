@@ -105,7 +105,6 @@ _Note: When you use an internal `<template>` you need to define an id, which wil
  * @param {string} [prefix=b] - Set the part before the '-', <b-yourtag></b-yourtag>
  * @param {string} [directory=/components] - Where components should be stored
  * @param {flat|tree} [structure=flat] - saves nested or at the root of directory,
- * @param {string} [rootMargin=200px] - How many pixels before entering the viewport it should trigger
  * @param {object.<string, string>} [aliases]- Map long tag names to shorter versions
  * @param {object.<string, string>} [keyValueAttributes]- Add key value attributes to known list
  * @param {object.<string, string>} [booleanAttributes]- Add boolean attributes to known list
@@ -115,7 +114,6 @@ _Note: When you use an internal `<template>` you need to define an id, which wil
 import initialize from 'd--b.js'
 initialize({
   prefix: 'a',
-  rootMargin: '100px',
   directory: '/components',
   // How files should be saved in the directory, files on disk use no prefix:
   // flat: <b-field-input>, saved as "/components/field-input.html"
@@ -134,7 +132,7 @@ initialize({
   booleanAttributes: {
     newattr: ['div', 'input']
   },
-  // Attributes in this list will not auto update <my-component value=""> will
+  // Attributes in this list will not auto update, <my-component value=""> will
   // not be set on any children
   attributeBlackList: ['value']
 });
