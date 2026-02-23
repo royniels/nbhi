@@ -266,7 +266,7 @@ _Note: If there are multiple elements that can have an attribute that has been d
 # FAQ
 
 ### How to pronounce d--b?
-However you like
+However you like.
 
 ### No build steps is nice, but I want to use TypeScript
 If you want to use TS you have a couple of options. You can either add a build step, nothing is stopping you, the library supports it. If you want to stay buildless but want to add some sort of type checking and hinting you can consider using JSDoc, it is [supported](https://www.typescriptlang.org/docs/handbook/jsdoc-supported-types.html#author) in TS as well.
