@@ -68,8 +68,6 @@ index.html
 
 ```
 
-_Note: Included files don't need to be wrapped in the `<template>` tag, although it is allowed, typically files are stored in the "components" folder, but this can be changed._
-
 ### Internal templates
 
 index.html
