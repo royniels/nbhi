@@ -16,18 +16,23 @@ const baseClasses = {
   div: HTMLDivElement,
 };
 
-const cache = new Set();
+const definitions = {};
 
-export default ({ name, template, usedAttributes, script, attributeMapping }) => {
-  if (cache.has(name)) {
+export { register, getDefinition };
+
+function getDefinition(name) {
+  return definitions[name];
+}
+
+function register({ name, template, usedAttributes, script, attributeMapping }) {
+  if (definitions[name]) {
     return;
   }
-
-  cache.add(name);
 
   const extend = template.getAttribute('extends') ?? false;
   const isFormControl = !!template.content.querySelector('input, select, textarea') && !extend;
   const BaseClass = baseClasses[extend] ? baseClasses[extend] : HTMLElement;
+  definitions[name] = { extend, usedAttributes };
 
   const Component = class extends BaseClass {
     static observedAttributes = Object.keys(usedAttributes);
@@ -35,9 +40,6 @@ export default ({ name, template, usedAttributes, script, attributeMapping }) =>
 
     #shadow = null;
     #observer = null;
-    #childKeyMap = new Map();
-    #recordIdentity = new WeakMap();
-    #nextIdentity = 1;
 
     constructor() {
       super();
@@ -80,86 +82,6 @@ export default ({ name, template, usedAttributes, script, attributeMapping }) =>
         });
         this.#observer.observe(this);
       }
-    }
-
-    setChildren(data) {
-      const id = `${ this.tagName.toLowerCase() }-child`;
-      const records = Array.isArray(data) ? data : [data];
-      const template = this.#shadow.querySelector(`#${ id }`);
-      const parent = template.parentNode;
-
-      if (!parent) {
-        throw new Error('Cannot find container to add children to, please supply "childContainerSelector"');
-      }
-
-      const newChildren = [];
-      const newKeyMap = new Map();
-
-      const getIdentity = (record, index) => {
-        if (record && typeof record === 'object') {
-          if (!this.#recordIdentity.has(record)) {
-            this.#recordIdentity.set(record, this.#nextIdentity++);
-          }
-          return this.#recordIdentity.get(record);
-        }
-        return `p:${ record }:${ index }`;
-      };
-
-      records.forEach((record, index) => {
-        const identity = getIdentity(record, index);
-        let child = this.#childKeyMap.get(identity);
-
-        if (!child) {
-          child = document.createElement(extend, { is: id });
-
-          const templateAttributes = Object.entries(child.usedAttributes)
-            .filter(([, value]) => value.includes('template'))
-            .map(([key]) => key);
-
-          templateAttributes.forEach(name => child.setAttribute(name, ''));
-          parent.append(child);
-        }
-
-        if (child.cachedRecordData !== record) {
-          if (record && typeof record === 'object') {
-            Object.entries(record).forEach(([key, value]) => hydrate(child, key, value));
-          } else {
-            hydrate(child, null, record);
-          }
-          child.cachedRecordData = record;
-        }
-
-        newChildren.push(child);
-        newKeyMap.set(identity, child);
-
-        function hydrate(child, key, value) {
-          if (key && key.startsWith('$')) {
-            child.updateAttribute({ name: key.slice(1), newValue: value, root: child });
-          } else {
-            const slot = child.querySelector(`[data-slot="${ key }"]`);
-            if (slot && slot.textContent !== value) {
-              slot.textContent = value;
-            }
-          }
-        }
-      });
-
-      // remove stale children
-      for (const [identity, child] of this.#childKeyMap.entries()) {
-        if (!newKeyMap.has(identity)) {
-          child.remove();
-        }
-      }
-
-      // reorder DOM to match new order
-      newChildren.forEach((child, index) => {
-        const current = parent.children[index];
-        if (current !== child) {
-          parent.insertBefore(child, current || null);
-        }
-      });
-
-      this.#childKeyMap = newKeyMap;
     }
 
     updateAttribute({ name, oldValue, newValue, root }) {

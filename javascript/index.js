@@ -1,7 +1,7 @@
 import register from './template.js';
-import slot from './slot.js';
+import update from './update.js';
 
-export { initialize, slot };
+export { initialize, update };
 
 async function initialize(options = {}) {
   const { inPage, fromFile } = register(options);

@@ -146,7 +146,7 @@
     <h2>Children (array data)</h2>
 
     <section>
-      <h5>Exdending (via JS)</h5>
+      <h5>Extending (via JS)</h5>
       <table>
         <thead>
           <tr>
@@ -154,14 +154,13 @@
             <th>Description</th>
           </tr>
         </thead>
-        <tbody class="list">
-          <template extends="tr" id="eg-row" data-id="">
-            <td data-slot="title">-</td>
-            <td data-slot="description">-</td>
+        <tbody>
+          <template extends="tr" id="eg-tr" data-id="">
+            <td name="title">-</td>
+            <td name="description"></td>
           </template>
         </tbody>
       </table>
-      <eg-list></eg-list>
     </section>
 
   </main>

@@ -1,4 +1,4 @@
-import customElement from './customElement.js';
+import { register } from './customElement.js';
 
 export default ({ prefix = 'db', source = '/components', attributes = {} }) => {
 
@@ -29,7 +29,7 @@ export default ({ prefix = 'db', source = '/components', attributes = {} }) => {
       inPage(template.content, template.id);
       const name = template.id;
       const usedAttributes = getUsedAttributes(template);
-      customElement({ name, template, attributeMapping, usedAttributes });
+      register({ name, template, attributeMapping, usedAttributes });
     });
   }
 
@@ -53,7 +53,7 @@ export default ({ prefix = 'db', source = '/components', attributes = {} }) => {
           await fromFile(root);
           inPage(template.content, name);
           const usedAttributes = getUsedAttributes(template);
-          customElement({ name, template, usedAttributes, attributeMapping, script });
+          register({ name, template, usedAttributes, attributeMapping, script });
 
           function getTemplate() {
             if (templates.length) {
