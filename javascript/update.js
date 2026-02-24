@@ -50,7 +50,10 @@ export default selector => {
     function updateText(element, value, name) {
       if (element.localName === 'option') {
         element.textContent = value;
-      } else if (element.localName === 'tr' || element.localName === 'li') {
+      } else if (
+        element.localName === 'tr' ||
+        element.localName === 'li' ||
+        (element.hasAttribute('child') && !element.shadowRoot)) {
         const match = element.querySelector(`[data-slot="${ name }"]`);
         if (match) {
           match.textContent = value;
@@ -81,8 +84,8 @@ export default selector => {
           templateChild = parent.querySelector('li').cloneNode(true);
         } else if (parent.localName === 'select') {
           templateChild = parent.querySelector('option').cloneNode(true);
-        // } else {
-        //   templateChild = instance.querySelector('.child').cloneNode(true);
+        } else if (parent.querySelector(('[child'))) {
+          templateChild = parent.querySelector('[child]').cloneNode(true);
         }
 
         parent.replaceChildren();
@@ -155,6 +158,12 @@ export default selector => {
               throw new Error('Cannot update table, missing tbody');
             }
             return tbody;
+          } else if (topLevel.querySelector('[child]')) {
+            const parent = topLevel.querySelector('[child]').parentElement;
+            if (!parent) {
+              throw new Error(`Cannot update ${ selector }, cannot find a parent node`);
+            }
+            return parent;
           }
           return topLevel;
         }

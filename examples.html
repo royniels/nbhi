@@ -54,11 +54,14 @@
     <h4>Select</h4>
     <db-select name="selector" data-id="id"></db-select>
 
-    <h4>Custom plain</h4>
-    <db-custom></db-custom>
+    <h4>Custom [child] attribute</h4>
+    <db-child></db-child>
 
-    <h4>Custom web component</h4>
-    <db-custom></db-custom>
+    <h4>Custom nested web component (default slot)</h4>
+    <db-nested-unnamed></db-nested-unnamed>
+
+    <h4>Custom nested web component (named slots)</h4>
+    <db-nested-named></db-nested-named>
 
   </main>
 
@@ -90,6 +93,21 @@
     ]);
 
     update('db-select')({ $value: 'Value 2' });
+
+    update('db-child')([
+      { title: 'My title', description: 'My description' },
+      { title: 'My title', description: 'My description' },
+    ]);
+
+    update('db-nested-unnamed')([
+      'My title',
+      'My title',
+    ]);
+
+    update('db-nested-named')([
+      { title: 'My title', description: 'My description' },
+      { title: 'My title', description: 'My description' },
+    ]);
 
     const end = performance.now();
     console.log(`Registered all components in ${Math.round(end - start)} ms`);

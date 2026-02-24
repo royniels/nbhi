@@ -46,7 +46,7 @@ export default async ({ prefix = 'db', source = '/components', attributes = {} }
           const template = document.createElement('template');
           template.content.append(...html.children);
           const script = await copyScript(template);
-          await fromFile(root);
+          await fromFile(template.content);
           inPage(template.content, name);
           const usedAttributes = getUsedAttributes(template);
           register({ name, template, usedAttributes, script });
@@ -204,7 +204,6 @@ export default async ({ prefix = 'db', source = '/components', attributes = {} }
     }
 
     registerCache.add(name);
-    console.log(name, usedAttributes);
 
     const isFormControl = !!template.content.querySelector('input, select, textarea');
 
