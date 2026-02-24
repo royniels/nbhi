@@ -78,13 +78,13 @@
     update('.js-attr')({ $value: 'Attributes set via JS', $disabled: true })
 
     update('db-table')([
-      { em: 'Italic', strong: 'and bold', description: 'Descriptive text' },
-      { em: 'Italic', strong: 'and bold', description: 'Descriptive text' },
+      { em: 'Italic', strong: 'and bold 1', description: 'My description 1' },
+      { em: 'Italic', strong: 'and bold 2', description: 'My description 2' },
     ]);
 
     update('db-ul')([
-      { em: 'Italic', strong: 'and bold' },
-      { em: 'Italic', strong: 'and bold' },
+      { em: 'Italic', strong: 'and bold 1' },
+      { em: 'Italic', strong: 'and bold 2' },
     ]);
 
     update('db-select')([
@@ -95,18 +95,15 @@
     update('db-select')({ $value: 'Value 2' });
 
     update('db-child')([
-      { title: 'My title', description: 'My description' },
-      { title: 'My title', description: 'My description' },
+      { title: 'My title 1', description: 'My description 1' },
+      { title: 'My title 2', description: 'My description 2' },
     ]);
 
-    update('db-nested-unnamed')([
-      'My title',
-      'My title',
-    ]);
+    update('db-nested-unnamed')(['My title 1', 'My title 2']);
 
     update('db-nested-named')([
-      { title: 'My title', description: 'My description' },
-      { title: 'My title', description: 'My description' },
+      { title: 'My title 1', description: 'My description 1' },
+      { title: 'My title 2', description: 'My description 2' },
     ]);
 
     const end = performance.now();
