@@ -1,22 +1,10 @@
-import { getDefinition } from './customElement.js';
-/*
-update(selector)('some text') -> update default slot
-update(selector)({ key: 'text' }) -> update named slot
-update(selector)({ $attr: true }) -> update a boolean attribute
-update(selector)({ $attr: 'text' }) -> update a keyValue attribute
-update(parentId, componentName)(['text a', 'text b']) -> create children and update the default slot
-update(parentId, componentName)([{ key: 'text a' }, { key: 'text b' }]) -> create children and update a name slot
-update(parentId, componentName)([{ $attr: 'text a' }, { $attr: 'text b' }]) -> create children and update an attribute
-*/
-export default (selector, componentName) => {
-  const instance = document.querySelector(selector);
+import element from './element.js';
+
+export default (selector, componentName, extend) => {
+  const instance = element(selector);
   const recordIdentity = new WeakMap();
   let childKeyMap = new Map();
   let nextIdentity = 1;
-
-  if (!instance) {
-    throw new Error(`Cannot update, ${ selector } could not be found`);
-  }
 
   return data => {
     if (isArray(data)) {
@@ -47,7 +35,14 @@ export default (selector, componentName) => {
     function updateFromObject(element, data) {
       Object.entries(data).forEach(([key, value]) => {
         if (key.startsWith('$')) {
-          updateAttribute(element, key, value);
+          const name = key.slice(1);
+          if (value === false) {
+            element.removeAttribute(name);
+          } else if (value === true) {
+            element.setAttribute(name, '');
+          } else {
+            element.setAttribute(name, value);
+          }
         } else {
           updateText(element, value, key);
         }
@@ -58,7 +53,7 @@ export default (selector, componentName) => {
       // When data is an array and the custom element is extending slots cannot
       // be used, so we use the name attribute instead to find the component and
       // update the text
-      if (isArray(data) && getDefinition(componentName).extend) {
+      if (isArray(data) && extend) {
         const instance = element.querySelector(`[name="${ name }"]`);
         if (instance) {
           instance.textContent = value;
@@ -79,10 +74,6 @@ export default (selector, componentName) => {
       }
     }
 
-    function updateAttribute(value, name) {
-      // Implement
-    }
-
     function updateList(records) {
       const newChildren = [];
       const newKeyMap = new Map();
@@ -92,7 +83,6 @@ export default (selector, componentName) => {
         let child = childKeyMap.get(identity);
 
         if (!child) {
-          const { extend } = getDefinition(componentName);
           if (extend) {
             child = document.createElement(extend, { is: componentName });
           } else {

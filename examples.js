@@ -1,15 +1,18 @@
 const start = performance.now();
 
-import { initialize, update } from '/javascript/index.js';
+import { initialize, update, onceVisible } from '/javascript/index.js';
 await initialize();
 
 update('eg-defaultjs')('Overwritten title');
 update('eg-namedjs')({ title: 'Overwritten title', description: 'Overwritten description' });
+update('eg-attrjs')({ $disabled: true, $value: 'Field value' });
 
-update('tbody', 'eg-tr')([
-  { title: 'Title A', description: 'Description A', '$data-id': 'record-a' },
-  { title: 'Title B', description: 'Description B', '$data-id': 'record-b' }
-]);
+onceVisible('tbody', () => {
+  update('tbody', 'eg-tr')([
+    { title: 'Title A', description: 'Description A' },
+    { title: 'Title B', description: 'Description B' }
+  ]);
+});
 
 const end = performance.now();
 console.log(`Registered all components in ${ Math.round(end - start) } ms`);
