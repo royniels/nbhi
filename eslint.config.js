@@ -6,6 +6,9 @@ export default [{
     },
   },
   rules: {
+    'arrow-parens': ['error', 'as-needed'],
+    'object-curly-spacing': ['error', 'always'],
+    'camelcase': ['error', { properties: 'always' }],
     'no-console': 'off',
     'key-spacing': ['error', { beforeColon: false, afterColon: true }],
     'template-curly-spacing': ['error', 'always'],

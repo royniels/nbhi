@@ -1,31 +1,33 @@
-import attributeMapping from './attributeMapping.js';
-
-export { register };
+const baseClasses = {
+  tr: HTMLTableRowElement,
+  td: HTMLTableCellElement,
+  th: HTMLTableCellElement,
+  li: HTMLLIElement,
+  ul: HTMLUListElement,
+  ol: HTMLOListElement,
+  button: HTMLButtonElement,
+  option: HTMLOptionElement,
+  input: HTMLInputElement,
+  select: HTMLSelectElement,
+  textarea: HTMLTextAreaElement,
+  a: HTMLAnchorElement,
+  img: HTMLImageElement,
+  form: HTMLFormElement,
+  div: HTMLDivElement,
+};
 
 const cache = new Set();
 
-function register(name, template, usedAttributes, script) {
+export default ({ name, template, usedAttributes, script, attributeMapping }) => {
   if (cache.has(name)) {
     return;
   }
 
   cache.add(name);
 
-  const extendsTag = template.getAttribute('extends') || null;
-  const isExtended = !!extendsTag;
-  const mapping = attributeMapping();
-  const isFormControl = !!template.content.querySelector('input, select, textarea') && !isExtended;
-
-  if (checkSlots()) {
-    console.log(template);
-    throw new Error(
-      'Found named and unnamed slots. Use only named slots or just a single unnamed slot'
-    );
-  }
-
-  const BaseClass = isExtended
-    ? getExtendedBaseClass(extendsTag)
-    : HTMLElement;
+  const extend = template.getAttribute('extends') ?? false;
+  const isFormControl = !!template.content.querySelector('input, select, textarea') && !extend;
+  const BaseClass = baseClasses[extend] ? baseClasses[extend] : HTMLElement;
 
   const Component = class extends BaseClass {
     static observedAttributes = Object.keys(usedAttributes);
@@ -43,7 +45,7 @@ function register(name, template, usedAttributes, script) {
       const clone = document.importNode(template.content, true);
       this.usedAttributes = usedAttributes;
 
-      if (isExtended) {
+      if (extend) {
         this.appendChild(clone);
       } else {
         this.#shadow = this.attachShadow({ mode: 'open' });
@@ -80,44 +82,11 @@ function register(name, template, usedAttributes, script) {
       }
     }
 
-    setSlot(text, selector, subSelector) {
-      const slots = Array.from(this.#shadow.querySelectorAll('slot'));
-      const unnamedSlot = slots.find(slot => !slot.hasAttribute('name'));
-
-      if (unnamedSlot) {
-        hydrate(this);
-      } else if (selector) {
-        let slot = this.querySelector(`[slot="${ selector }"]`);
-        if (!slot) {
-          slot = document.createElement('span');
-          slot.setAttribute('slot', selector);
-          this.append(slot);
-        }
-        hydrate(slot, subSelector);
-      }
-
-      function hydrate(target, selector) {
-        if (selector) {
-          const sub = target.querySelector(selector);
-          if (sub && sub.textContent !== text) {
-            sub.textContent = text;
-          }
-        } else if (target.textContent !== text) {
-          target.textContent = text;
-        }
-      }
-    }
-
     setChildren(data) {
       const id = `${ this.tagName.toLowerCase() }-child`;
       const records = Array.isArray(data) ? data : [data];
       const template = this.#shadow.querySelector(`#${ id }`);
       const parent = template.parentNode;
-      const { extendsTag } = customElements.get(id);
-
-      if (!extendsTag) {
-        throw new Error('A child template needs to extend an existing tag');
-      }
 
       if (!parent) {
         throw new Error('Cannot find container to add children to, please supply "childContainerSelector"');
@@ -141,7 +110,7 @@ function register(name, template, usedAttributes, script) {
         let child = this.#childKeyMap.get(identity);
 
         if (!child) {
-          child = document.createElement(extendsTag, { is: id });
+          child = document.createElement(extend, { is: id });
 
           const templateAttributes = Object.entries(child.usedAttributes)
             .filter(([, value]) => value.includes('template'))
@@ -200,8 +169,8 @@ function register(name, template, usedAttributes, script) {
         }
 
         const tagsToApplyTo = usedAttributes[name] ?? [];
-        const isBoolean = Array.isArray(mapping.boolean[name]);
-        const isKeyValue = Array.isArray(mapping.keyValue[name]);
+        const isBoolean = Array.isArray(attributeMapping.boolean[name]);
+        const isKeyValue = Array.isArray(attributeMapping.keyValue[name]);
         const isUserDefined = !isBoolean && !isKeyValue;
         const update = element => {
           if (element) {
@@ -273,10 +242,8 @@ function register(name, template, usedAttributes, script) {
     }
   };
 
-  Component.extendsTag = extendsTag;
-
   Object.keys(usedAttributes)
-    .filter(key => Array.isArray(mapping.boolean[key]))
+    .filter(key => Array.isArray(attributeMapping.boolean[key]))
     .forEach(key => {
       Object.defineProperty(Component.prototype, key, {
         get() {
@@ -309,37 +276,5 @@ function register(name, template, usedAttributes, script) {
     });
   }
 
-  if (isExtended) {
-    customElements.define(name, Component, { extends: extendsTag });
-  } else {
-    customElements.define(name, Component);
-  }
-
-  function checkSlots() {
-    const slots = Array.from(template.content.querySelectorAll('slot'));
-    const unnamed = slots.find(slot => !slot.hasAttribute('name'));
-    return unnamed && slots.length > 1;
-  }
-
-  function getExtendedBaseClass(tag) {
-    const map = {
-      tr: HTMLTableRowElement,
-      td: HTMLTableCellElement,
-      th: HTMLTableCellElement,
-      li: HTMLLIElement,
-      ul: HTMLUListElement,
-      ol: HTMLOListElement,
-      button: HTMLButtonElement,
-      option: HTMLOptionElement,
-      input: HTMLInputElement,
-      select: HTMLSelectElement,
-      textarea: HTMLTextAreaElement,
-      a: HTMLAnchorElement,
-      img: HTMLImageElement,
-      form: HTMLFormElement,
-      div: HTMLDivElement,
-    };
-
-    return map[tag] || HTMLElement;
-  }
-}
+  customElements.define(name, Component, extend ? { extends: extend } : undefined);
+};

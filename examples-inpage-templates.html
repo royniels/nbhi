@@ -120,26 +120,6 @@
       <eg-namedjs></eg-namedjs>
     </section>
 
-    <section>
-      <h5>Complex named slot (via JS)</h5>
-      <template id="eg-nested">
-        <div class="box">
-          <hgroup>
-            <h5>
-              <slot name="title">Default title</slot>
-            </h5>
-            <p>
-              <slot name="description">Default description</slot>
-            </p>
-          </hgroup>
-        </div>
-      </template>
-      <eg-nested>
-        <span slot="title"><em>Default</em> title</span>
-        <span slot="description"><strong>Default</strong> description</span>
-      </eg-nested>
-    </section>
-
     <hr>
 
     <h2>Attributes</h2>
@@ -167,22 +147,20 @@
 
     <section>
       <h5>Exdending (via JS)</h5>
-      <template id="eg-list">
-        <table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template extends="tr" data-id="">
-              <td data-slot="title">-</td>
-              <td data-slot="description">-</td>
-            </template>
-          </tbody>
-        </table>
-      </template>
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody class="list">
+          <template extends="tr" id="eg-row" data-id="">
+            <td data-slot="title">-</td>
+            <td data-slot="description">-</td>
+          </template>
+        </tbody>
+      </table>
       <eg-list></eg-list>
     </section>
 
