@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Platform to manage user accounts and business cards">
+  <title>External template examples</title>
+
+  <style>
+    body {
+      background-color: #333;
+      color: white;
+      font-family: 'Helvetica';
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <hgroup>
+      <h1>Examples</h1>
+      <p>Please inspect the source for implementation details</p>
+    </hgroup>
+
+    <hr>
+
+    <h2>Slots</h2>
+
+    <db-slots>
+      Default slot overwritten with HTML
+      <span slot="title">Named slot overwritten via HTML</span>
+    </db-slots>
+
+    <db-slots class="js-slots"></db-slots>
+
+    <hr>
+
+    <h2>Attributes</h2>
+
+    <db-attr value="Attributes set via HTML" disabled></db-attr><br>
+    <db-attr class="js-attr"></db-attr>
+
+    <hr>
+
+    <h2>Array data</h2>
+
+    <h4>Table</h4>
+    <db-table></db-table>
+
+    <h4>List</h4>
+    <db-ul></db-ul>
+
+    <h4>Select</h4>
+    <db-select name="selector" data-id="id"></db-select>
+
+    <h4>Custom plain</h4>
+    <db-custom></db-custom>
+
+    <h4>Custom web component</h4>
+    <db-custom></db-custom>
+
+  </main>
+
+  <script type="module">
+    const start = performance.now();
+
+    import initialize from '/javascript/index.js';
+    import update from '/javascript/update.js';
+    await initialize();
+
+    const updater = update('.js-slots');
+    updater('Default slot overwritten with JS');
+    update('.js-slots')({ title: 'Named slot overwritten with JS' });
+    update('.js-attr')({ $value: 'Attributes set via JS', $disabled: true })
+
+    update('db-table')([
+      { em: 'Italic', strong: 'and bold', description: 'Descriptive text' },
+      { em: 'Italic', strong: 'and bold', description: 'Descriptive text' },
+    ]);
+
+    update('db-ul')([
+      { em: 'Italic', strong: 'and bold' },
+      { em: 'Italic', strong: 'and bold' },
+    ]);
+
+    update('db-select')([
+      { label: 'Option 1', $value: 'value 1' },
+      { label: 'Option 2', $value: 'Value 2' },
+    ]);
+
+    update('db-select')({ $value: 'Value 2' });
+
+    const end = performance.now();
+    console.log(`Registered all components in ${Math.round(end - start)} ms`);
+  </script>
+
+</body>
+
+</html>

@@ -1,16 +1,14 @@
 import element from './element.js';
 
-export default (selector, componentName, extend) => {
+export default selector => {
   const instance = element(selector);
   const recordIdentity = new WeakMap();
   let childKeyMap = new Map();
   let nextIdentity = 1;
+  let templateChild;
 
   return data => {
     if (isArray(data)) {
-      if (!componentName) {
-        throw new Error('Please provide a component name, ie: my-component');
-      }
       updateList(data);
     } else {
       if (isPrimitive(data)) {
@@ -50,13 +48,12 @@ export default (selector, componentName, extend) => {
     }
 
     function updateText(element, value, name) {
-      // When data is an array and the custom element is extending slots cannot
-      // be used, so we use the name attribute instead to find the component and
-      // update the text
-      if (isArray(data) && extend) {
-        const instance = element.querySelector(`[name="${ name }"]`);
-        if (instance) {
-          instance.textContent = value;
+      if (element.localName === 'option') {
+        element.textContent = value;
+      } else if (element.localName === 'tr' || element.localName === 'li') {
+        const match = element.querySelector(`[data-slot="${ name }"]`);
+        if (match) {
+          match.textContent = value;
         }
       } else if (!name && element.textContent !== value) {
         element.textContent = value;
@@ -75,6 +72,26 @@ export default (selector, componentName, extend) => {
     }
 
     function updateList(records) {
+      const parent = getParent();
+
+      if (!templateChild) {
+        if (parent.localName === 'tbody') {
+          templateChild = parent.querySelector('tr').cloneNode(true);
+        } else if (parent.localName === 'ol' || parent.localName === 'ul') {
+          templateChild = parent.querySelector('li').cloneNode(true);
+        } else if (parent.localName === 'select') {
+          templateChild = parent.querySelector('option').cloneNode(true);
+        // } else {
+        //   templateChild = instance.querySelector('.child').cloneNode(true);
+        }
+
+        parent.replaceChildren();
+      }
+
+      if (!templateChild) {
+        throw new Error(`Cannot update ${ selector }, cannot find child element`);
+      }
+
       const newChildren = [];
       const newKeyMap = new Map();
 
@@ -83,12 +100,8 @@ export default (selector, componentName, extend) => {
         let child = childKeyMap.get(identity);
 
         if (!child) {
-          if (extend) {
-            child = document.createElement(extend, { is: componentName });
-          } else {
-            child = document.createElement(componentName);
-          }
-          instance.append(child);
+          child = templateChild.cloneNode(true);
+          parent.append(child);
         }
 
         if (child.cachedRecordData !== record) {
@@ -123,13 +136,31 @@ export default (selector, componentName, extend) => {
 
       // reorder DOM to match new order
       newChildren.forEach((child, index) => {
-        const current = instance.children[index];
+        const current = parent.children[index];
         if (current !== child) {
-          instance.insertBefore(child, current || null);
+          parent.insertBefore(child, current || null);
         }
       });
 
       childKeyMap = newKeyMap;
+
+      function getParent() {
+        if (instance.tagName.includes('-')) {
+          const topLevel = [...instance.shadowRoot.children].find(child => {
+            return child.localName !== 'script' && child.localName !== 'style';
+          });
+          if (topLevel.localName === 'table') {
+            const tbody = topLevel.querySelector('tbody');
+            if (!tbody) {
+              throw new Error('Cannot update table, missing tbody');
+            }
+            return tbody;
+          }
+          return topLevel;
+        }
+
+        return instance.localName;
+      }
     }
   };
 };
