@@ -148,27 +148,30 @@ export default selector => {
       childKeyMap = newKeyMap;
 
       function getParent() {
-        if (instance.tagName.includes('-')) {
-          const topLevel = [...instance.shadowRoot.children].find(child => {
-            return child.localName !== 'script' && child.localName !== 'style';
-          });
-          if (topLevel.localName === 'table') {
-            const tbody = topLevel.querySelector('tbody');
-            if (!tbody) {
-              throw new Error('Cannot update table, missing tbody');
-            }
-            return tbody;
-          } else if (topLevel.querySelector('[child]')) {
-            const parent = topLevel.querySelector('[child]').parentElement;
-            if (!parent) {
-              throw new Error(`Cannot update ${ selector }, cannot find a parent node`);
-            }
-            return parent;
+        const topLevel = getTopLevel();
+        if (topLevel.localName === 'table') {
+          const tbody = topLevel.querySelector('tbody');
+          if (!tbody) {
+            throw new Error('Cannot update table, missing tbody');
           }
-          return topLevel;
+          return tbody;
+        } else if (topLevel.querySelector('[child]')) {
+          const parent = topLevel.querySelector('[child]').parentElement;
+          if (!parent) {
+            throw new Error(`Cannot update ${ selector }, cannot find a parent node`);
+          }
+          return parent;
         }
+        return topLevel;
 
-        return instance.localName;
+        function getTopLevel() {
+          if (instance.tagName.includes('-')) {
+            return [...instance.shadowRoot.children].find(child => {
+              return child.localName !== 'script' && child.localName !== 'style';
+            });
+          }
+          return instance;
+        }
       }
     }
   };

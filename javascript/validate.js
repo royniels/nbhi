@@ -3,7 +3,6 @@ import element from './element.js';
 // Too long and too short is only set when the actual input is changed, so we do it here
 export default selector => {
   const instance = element(selector);
-
   if (instance.elementInternals) {
     const element = instance.formElement;
     const value = element.value;
