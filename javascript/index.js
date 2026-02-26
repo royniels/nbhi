@@ -12,6 +12,7 @@ export default async ({ prefix = 'db', source = '/components', attributes = {} }
     throw new Error('prefix option needs to be a string of at least one character');
   }
 
+  const inheritedStylesheets = getInheritedStylesheets();
   inPage(document.querySelector('body'));
   await fromFile(document.querySelector('body'));
 
@@ -102,6 +103,7 @@ export default async ({ prefix = 'db', source = '/components', attributes = {} }
 
         const clone = document.importNode(template.content, true);
         this.#shadow = this.attachShadow({ mode: 'open' });
+        this.#shadow.adoptedStyleSheets = inheritedStylesheets;
         this.#shadow.appendChild(clone);
 
         if (isFormControl) {
@@ -123,4 +125,20 @@ export default async ({ prefix = 'db', source = '/components', attributes = {} }
       }
     });
   };
+
+  function getInheritedStylesheets() {
+    return Array.from(document.styleSheets)
+      .filter(sheet => sheet?.ownerNode?.dataset?.inherit === 'true')
+      .map(sheet => {
+        const newSheet = new CSSStyleSheet();
+        try {
+          const cssText = Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n');
+          newSheet.replaceSync(cssText);
+        } catch (error) {
+          error;
+          console.error('Permission denied for sheet:', sheet.href);
+        }
+        return newSheet;
+      });
+  }
 };
