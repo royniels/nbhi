@@ -8,6 +8,10 @@ export default selector => {
   let templateChild;
 
   return data => {
+    if (isDate(data)) {
+      throw new Error('Please convert date to string, ie. toISOString()');
+    }
+
     if (isArray(data)) {
       updateList(data);
     } else {
@@ -18,12 +22,16 @@ export default selector => {
       }
     }
 
+    function isDate(input) {
+      return input?.getTime !== undefined;
+    }
+
     function isPrimitive(input) {
       return !isArray(input) && !isObject(input);
     }
 
     function isObject(input) {
-      return !isArray(input) && input !== null && typeof input === 'object';
+      return !isArray(input) && input !== null && typeof input === 'object' && Object.keys(input).length;
     }
 
     function isArray(input) {
