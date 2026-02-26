@@ -122,7 +122,12 @@ function updateAttributes({ name, value, attributeMapping, root }) {
   if (type === 'userDefined') {
     process(root.querySelector(`[${ name }]`));
   } else {
-    tagNames.forEach(tagName => root.querySelectorAll(tagName).forEach(process));
+    tagNames.forEach(tagName => {
+      root.querySelectorAll(tagName).forEach(process);
+      if (tagName === root?.localName) {
+        process(root);
+      }
+    });
   }
 
   function process(element) {
