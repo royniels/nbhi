@@ -1,10 +1,12 @@
+import { getAttributeMapping, updateAttributes } from './attributes.js';
 import element from './element.js';
 
 export default selector => {
   const instance = element(selector);
-  const recordIdentity = new WeakMap();
-  let childKeyMap = new Map();
-  let nextIdentity = 1;
+  const idCache = new WeakMap();
+  const mappingCache = new WeakMap();
+  let renderedChildren = new Map();
+  let idCount = 1;
   let templateChild;
 
   return data => {
@@ -42,12 +44,20 @@ export default selector => {
       Object.entries(data).forEach(([key, value]) => {
         if (key.startsWith('$')) {
           const name = key.slice(1);
-          if (value === false) {
-            element.removeAttribute(name);
-          } else if (value === true) {
-            element.setAttribute(name, '');
+          if (element.shadowRoot) {
+            if (value === false) {
+              element.removeAttribute(name);
+            } else if (value === true) {
+              element.setAttribute(name, '');
+            } else {
+              element.setAttribute(name, value);
+            }
           } else {
-            element.setAttribute(name, value);
+            if (!mappingCache.has(element)) {
+              mappingCache.set(element, getAttributeMapping(element));
+            }
+            const attributeMapping = mappingCache.get(element);
+            updateAttributes({ name, value, attributeMapping, root: element });
           }
         } else {
           updateText(element, value, key);
@@ -62,9 +72,13 @@ export default selector => {
         element.localName === 'tr' ||
         element.localName === 'li' ||
         (element.hasAttribute('child') && !element.shadowRoot)) {
-        const match = element.querySelector(`[data-slot="${ name }"]`);
-        if (match) {
-          match.textContent = value;
+        if (element.hasAttribute('data-slot') && element.dataset.slot === name) {
+          element.textContent = value;
+        } else {
+          const match = element.querySelector(`[data-slot="${ name }"]`);
+          if (match) {
+            match.textContent = value;
+          }
         }
       } else if (!name && element.textContent !== value) {
         element.textContent = value;
@@ -103,57 +117,55 @@ export default selector => {
         throw new Error(`Cannot update ${ selector }, cannot find child element`);
       }
 
-      const newChildren = [];
-      const newKeyMap = new Map();
+      const newChildren = new Map();
 
       records.forEach((record, index) => {
-        const identity = getIdentity(record, index);
-        let child = childKeyMap.get(identity);
+        const id = getId(record, index);
+        let child = renderedChildren.get(id);
 
         if (!child) {
           child = templateChild.cloneNode(true);
           parent.append(child);
         }
 
-        if (child.cachedRecordData !== record) {
+        if (child.cachedData !== record) {
           if (isObject(record)) {
             updateFromObject(child, record);
           } else {
             updateText(child, record);
           }
-          child.cachedRecordData = record;
+          child.cachedData = record;
         }
 
-        newChildren.push(child);
-        newKeyMap.set(identity, child);
-
-        function getIdentity(record, index) {
-          if (record && typeof record === 'object') {
-            if (!recordIdentity.has(record)) {
-              recordIdentity.set(record, nextIdentity++);
-            }
-            return recordIdentity.get(record);
-          }
-          return `p:${ record }:${ index }`;
-        };
+        newChildren.set(id, child);
       });
 
-      // remove stale children
-      for (const [identity, child] of childKeyMap.entries()) {
-        if (!newKeyMap.has(identity)) {
+      renderedChildren.forEach((child, id) => {
+        if (!newChildren.has(id)) {
           child.remove();
         }
-      }
-
-      // reorder DOM to match new order
-      newChildren.forEach((child, index) => {
-        const current = parent.children[index];
-        if (current !== child) {
-          parent.insertBefore(child, current || null);
-        }
       });
 
-      childKeyMap = newKeyMap;
+      // Order children
+      let lastChild;
+      newChildren.forEach(child => {
+        if (child !== lastChild?.nextSibling) {
+          parent.insertBefore(child, lastChild ? lastChild.nextSibling : parent.firstChild);
+        }
+        lastChild = child;
+      });
+
+      renderedChildren = newChildren;
+
+      function getId(record, index) {
+        if (record && typeof record === 'object') {
+          if (!idCache.has(record)) {
+            idCache.set(record, idCount++);
+          }
+          return idCache.get(record);
+        }
+        return `p:${ record }:${ index }`;
+      };
 
       function getParent() {
         const topLevel = getTopLevel();

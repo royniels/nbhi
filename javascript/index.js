@@ -1,7 +1,8 @@
+import { getAttributeMapping, updateAttributes } from './attributes.js';
+
 export default async ({ prefix = 'db', source = '/components', attributes = {} } = {}) => {
   const registerCache = new Set();
   const fileCache = new Set();
-  const attributeMapping = getAttributeMapping();
 
   if (typeof source !== 'string' || !Object.keys(source).length) {
     throw new Error('source option needs to be a string or an object');
@@ -27,8 +28,7 @@ export default async ({ prefix = 'db', source = '/components', attributes = {} }
 
       inPage(template.content, template.id);
       const name = template.id;
-      const usedAttributes = getUsedAttributes(template);
-      register({ name, template, usedAttributes });
+      register({ name, template });
     });
   }
 
@@ -48,8 +48,7 @@ export default async ({ prefix = 'db', source = '/components', attributes = {} }
           const script = await copyScript(template);
           await fromFile(template.content);
           inPage(template.content, name);
-          const usedAttributes = getUsedAttributes(template);
-          register({ name, template, usedAttributes, script });
+          register({ name, template, script });
 
           function copyScript(template) {
             const script = template.content.querySelector('script');
@@ -83,122 +82,7 @@ export default async ({ prefix = 'db', source = '/components', attributes = {} }
     return Promise.all(promises);
   }
 
-  function getUsedAttributes(template) {
-    const { keyValue, excludedAttributes, excludedElements, boolean: binary } = attributeMapping;
-    const results = {};
-    traverse(template.content);
-    return results;
-
-    function traverse(element) {
-      const tagName = element.localName;
-      if (
-        element &&
-        typeof tagName === 'string' &&
-        !excludedElements.includes(element.localName)
-      ) {
-        Object
-          .entries(binary)
-          .filter(([key]) => !excludedAttributes.includes(key))
-          .filter(([, elements]) => elements.includes(tagName))
-          .forEach(([key, elements]) => results[key] = { type: 'boolean', elements });
-
-        Object
-          .entries(keyValue)
-          .filter(([key]) => !excludedAttributes.includes(key))
-          .filter(([, elements]) => elements.includes(tagName))
-          .forEach(([key, elements]) => results[key] = { type: 'keyValue', elements });
-
-        if (element.hasAttributes()) {
-          [...element.attributes].forEach(attribute => {
-            const name = attribute.name;
-            if (!excludedAttributes.includes(name)) {
-              if (!results[name]) {
-                results[name] = { type: 'userDefined', elements: [] };
-              }
-
-              if (!results[name].elements.includes(tagName)) {
-                results[name].elements.push(tagName);
-              }
-            }
-          });
-        }
-      }
-      [...element.children].forEach(child => traverse(child));
-    }
-  }
-
-  function getAttributeMapping() {
-    const mapping = {
-      boolean: {
-        autofocus: ['button', 'input', 'select', 'textarea'],
-        autoplay: ['audio', 'video'],
-        checked: ['input'],
-        controls: ['audio', 'video'],
-        default: ['track'],
-        defer: ['script'],
-        disabled: ['button', 'input', 'optgroup', 'option', 'select', 'textarea', 'fieldset'],
-        formnovalidate: ['button', 'input'],
-        ismap: ['img'],
-        loop: ['audio', 'video'],
-        multiple: ['input', 'select'],
-        muted: ['audio', 'video'],
-        novalidate: ['form'],
-        open: ['details', 'dialog'],
-        playsinline: ['video'],
-        readonly: ['input', 'textarea'],
-        required: ['input', 'select', 'textarea'],
-        reversed: ['ol'],
-      },
-      keyValue: {
-        accept: ['input'],
-        autocomplete: ['input', 'select', 'textarea'],
-        cols: ['textarea'],
-        dirname: ['input', 'textarea'],
-        max: ['input'],
-        maxlength: ['input', 'textarea'],
-        min: ['input'],
-        minlength: ['input', 'textarea'],
-        name: ['input', 'select', 'textarea'],
-        pattern: ['input'],
-        placeholder: ['input', 'textarea'],
-        rows: ['textarea'],
-        size: ['input', 'select'],
-        step: ['input'],
-        type: ['input'],
-        value: ['input', 'select'],
-        width: ['input'],
-        wrap: ['textarea'],
-        htmlFor: ['label'],
-        for: ['label'],
-        href: ['a'],
-        src: ['audio', 'img', 'input', 'video'],
-      },
-      excludedAttributes: ['class', 'extends', 'id', 'part', 'data-slot', 'child'],
-      excludedElements: ['slot', 'template', 'style', 'script'],
-    };
-
-    Object.entries(attributes).forEach(([key, { excluded = false, type, elements = [] }]) => {
-      if (excluded === true) {
-        mapping.excludedAttributes = [...new Set([...mapping.excludedAttributes, key])];
-      } else if (type === 'boolean' && Array.isArray(elements)) {
-        merge(mapping.boolean);
-      } else if (type === 'keyValue' && Array.isArray(elements)) {
-        merge(mapping.keyValue);
-      }
-
-      function merge(source) {
-        if (!Array.isArray(source[key])) {
-          source[key] = elements;
-        } else {
-          source[key] = [...new Set([...source[key], ...elements])];
-        }
-      }
-    });
-
-    return mapping;
-  }
-
-  function register({ name, template, usedAttributes, script }) {
+  function register({ name, template, script }) {
     if (registerCache.has(name)) {
       return;
     }
@@ -206,9 +90,10 @@ export default async ({ prefix = 'db', source = '/components', attributes = {} }
     registerCache.add(name);
 
     const isFormControl = !!template.content.querySelector('input, select, textarea');
+    const attributeMapping = getAttributeMapping(template.content, attributes);
 
     customElements.define(name, class extends HTMLElement {
-      static observedAttributes = Object.keys(usedAttributes);
+      static observedAttributes = Object.keys(attributeMapping);
       static formAssociated = isFormControl;
       #shadow = null;
 
@@ -232,36 +117,8 @@ export default async ({ prefix = 'db', source = '/components', attributes = {} }
       }
 
       attributeChangedCallback(name, oldValue, newValue) {
-        if (oldValue === newValue) {
-          return;
-        }
-
-        const { type, elements } = usedAttributes[name] ?? [];
-
-        const update = element => {
-          if (element) {
-            if (
-              newValue === null ||
-              newValue === undefined ||
-              (type === 'boolean' && newValue === false)
-            ) {
-              element.removeAttribute(name);
-            } else {
-              element.setAttribute(name, newValue);
-              // Triggers <select> to update the selected <option>
-              if (name === 'value') {
-                element.value = newValue;
-              }
-            }
-          }
-        };
-
-        if (type === 'userDefined') {
-          update(this.#shadow.querySelector(`[${ name }]`));
-        } else {
-          elements.forEach(element => {
-            this.#shadow.querySelectorAll(element).forEach(update);
-          });
+        if (oldValue !== newValue) {
+          updateAttributes({ name, value: newValue, attributeMapping, root: this.#shadow });
         }
       }
     });
