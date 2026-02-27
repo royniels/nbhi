@@ -100,20 +100,6 @@ export default selector => {
       const parent = getParent();
 
       if (!templateChild) {
-        if (parent.localName === 'tbody') {
-          templateChild = parent.querySelector('tr').cloneNode(true);
-        } else if (parent.localName === 'ol' || parent.localName === 'ul') {
-          templateChild = parent.querySelector('li').cloneNode(true);
-        } else if (parent.localName === 'select') {
-          templateChild = parent.querySelector('option').cloneNode(true);
-        } else if (parent.querySelector(('[child'))) {
-          templateChild = parent.querySelector('[child]').cloneNode(true);
-        }
-
-        parent.replaceChildren();
-      }
-
-      if (!templateChild) {
         throw new Error(`Cannot update ${ selector }, cannot find child element`);
       }
 
@@ -170,19 +156,46 @@ export default selector => {
       function getParent() {
         const topLevel = getTopLevel();
         if (topLevel.localName === 'table') {
-          const tbody = topLevel.querySelector('tbody');
-          if (!tbody) {
-            throw new Error('Cannot update table, missing tbody');
-          }
-          return tbody;
+          return process('tbody', 'tr');
+        } else if (topLevel.localName === 'ol') {
+          return process('ol', 'li');
+        } else if (topLevel.localName === 'ul') {
+          return process('ul', 'li');
+        } else if (topLevel.localName === 'select') {
+          return process('select', 'option');
         } else if (topLevel.querySelector('[child]')) {
-          const parent = topLevel.querySelector('[child]').parentElement;
+          const parent = getParent(topLevel.querySelector('[child]')).parentElement;
+          setTemplateChild('[child]', parent);
+          if (parent.localName === 'slot' && parent.hasAttribute('name')) {
+            templateChild.slot = parent.getAttribute('name');
+          }
+          return parent.localName === 'slot' ? instance : parent;
+        }
+
+        throw new Error(`Could not find a parent to assign children to, valid
+          options are table, ul, ol, select or a structure with a child attribute`);
+
+        function process(parentName, childName) {
+          const parent = getParent(parentName);
+          setTemplateChild(childName, parent);
+          return parent;
+        }
+
+        function setTemplateChild(childName, parent) {
+          if (!templateChild) {
+            templateChild = parent.querySelector(childName).cloneNode(true);
+            parent.replaceChildren();
+          }
+        }
+
+        function getParent(parentName) {
+          const parent = typeof parentName === 'string'
+            ? topLevel.querySelector(parentName) : parentName;
           if (!parent) {
-            throw new Error(`Cannot update ${ selector }, cannot find a parent node`);
+            throw new Error('Cannot update table, missing tbody');
           }
           return parent;
         }
-        return topLevel;
 
         function getTopLevel() {
           if (instance.tagName.includes('-')) {
