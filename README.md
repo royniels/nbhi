@@ -225,10 +225,7 @@ index.html
 <script>
   import { initialize, update } from 'nbhi';
   await initialize();
-  update('my-component')([
-    { name: 'Record 1' },
-    { name: 'Record 2' },
-  ]);
+  update('my-component')(['Record 1', 'Record 2']);
 </script>
 ```
 
@@ -268,14 +265,14 @@ index.html
 </script>
 ```
 
-Some logic for `<ol>`, `<ul>` and `<option>`
+Same logic for `<ol>`, `<ul>` and `<option>`
 
 ## Lazy loading
 
 ```js
 import { onceVisible } form 'nbhi';
 
-onceVisible('my-component', element => ...); // Will run once it comes in view (200px before)
+onceVisible('my-component', element => ...); // Will run once when it comes into view (200px before)
 ```
 
 ## Validating a form field
