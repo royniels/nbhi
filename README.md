@@ -36,7 +36,7 @@ For no-build solutions:
 
 ```js
 <script type="module">
-  import { initialize } from 'https://esm.run/nbhi@x.x.x';
+  import { initialize } from 'https://cdn.jsdelivr.net/npm/nbhi@x.x.x/+esm';
   await initialize();
 </script>
 ```
@@ -286,6 +286,15 @@ const internals = validate('my-form-field'); // Returns elementInternals
 internals.checkValidity();
 internals.validity;
 ```
+## Inherit styles
+
+Your components can inherit global styles. These styles are copied once and a reference to those styles are given to each web component keeping it performant.
+This function is handy if you have global styles that a component needs to inherit from.
+
+```html
+<link rel="stylesheet" data-inherit="true" href="...">
+```
+
 
 ## FAQ
 
