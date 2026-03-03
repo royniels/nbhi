@@ -68,8 +68,7 @@
   <script type="module">
     const start = performance.now();
 
-    // import { initialize, update } from '/javascript/index.js';
-    import { initialize, update } from '/index.min.js';
+    import { initialize, update } from '/javascript/index.js';
     await initialize({ prefix: 'x', source: '/examples' });
 
     const updater = update('.js-slots');

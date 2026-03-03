@@ -9,10 +9,6 @@ async function initialize({ prefix = 'db', source = '/components' } = {}) {
   const registerCache = new Set();
   const fileCache = new Set();
 
-  if (typeof source !== 'string' || !Object.keys(source).length) {
-    throw new Error('source option needs to be a string or an object');
-  }
-
   if (typeof prefix !== 'string' || prefix === '') {
     throw new Error('prefix option needs to be a string of at least one character');
   }
