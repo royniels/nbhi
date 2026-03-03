@@ -1,6 +1,11 @@
 import { getAttributeMapping, updateAttributes } from './attributes.js';
+import update from './update.js';
+import validate from './validate.js';
+import onceVisible from './onceVisible.js';
 
-export default async ({ prefix = 'db', source = '/components' } = {}) => {
+export { initialize, update, validate, onceVisible };
+
+async function initialize({ prefix = 'db', source = '/components' } = {}) {
   const registerCache = new Set();
   const fileCache = new Set();
 

@@ -1,19 +1,16 @@
 {
-  "name": "d--b",
-  "version": "0.5.0",
-  "description": "d--b is a simple **3KB** library that allows you to include html files into other html files and turns them into [web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components). Lazy initialization of content (when entering the viewport) and a one line call to update/hydrate content in your html pages. No build tools required, no `package.json` needed.",
+  "name": "nbhi",
+  "version": "0.6.0",
+  "description": "No-Build HTML Includes (NBHI) is a simple library that allows you to include html files into other html files and turns them into [web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components). Lazy initialization of content (when entering the viewport) and a one line call to update/hydrate content in your html pages. No build tools required, no `package.json` needed.",
   "keywords": [
     "web-components",
-    "html",
-    "includes",
+    "html-includes",
     "no-build",
     "hydration",
     "form-validation",
     "lazy-loading",
     "mpa",
-    "multi",
-    "page",
-    "application",
+    "multi-page-application",
     "composable"
   ],
   "homepage": "https://github.com/royniels/d--b#readme",
@@ -24,17 +21,17 @@
     "type": "git",
     "url": "git+https://github.com/royniels/d--b.git"
   },
+  "files": [
+    "./index.min.js"
+  ],
   "exports": {
-    ".": "./dist/index.js",
-    "update.js": "./dist/update.js",
-    "onceVisible": "./dist/onceVisible.js",
-    "validate": "./dist/validate.js"
+    ".": "./index.min.js"
   },
   "license": "MIT",
   "author": "Roy Niels",
   "type": "module",
-  "main": "eslint.config.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx esbuild ./javascript/index.js --minify --bundle --format=esm --outfile=index.min.js"
   }
 }

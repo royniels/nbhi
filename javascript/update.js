@@ -189,10 +189,14 @@ export default selector => {
         }
 
         function getParent(parentName) {
+          if (parentName === topLevel.localName) {
+            return topLevel;
+          }
           const parent = typeof parentName === 'string'
             ? topLevel.querySelector(parentName) : parentName;
           if (!parent) {
-            throw new Error('Cannot update table, missing tbody');
+            console.log({ topLevel, parentName });
+            throw new Error('Cannot find parent');
           }
           return parent;
         }

@@ -2,31 +2,50 @@
 
 **HTML includes and reactive rendering, all without any build tools**
 
-d--b is a simple **4KB** library that allows you to include html files into other html files and turns them into [web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components). Lazy initialization of content (when entering the viewport) and a one line call to update/hydrate content in your html pages. No build tools required, no `package.json` needed.
+No-build HTML includes (NBHI) is a simple **3.9KB** library that allows you to include html files into other html files and turns them into [web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components). Lazy initialization of content (when entering the viewport) and a one line call to update/hydrate content and attributes in your html pages. No build tools required, no `package.json` needed.
 
 # Why?
 
-d--b is developed to create real-time data driven web sites. It has lower complexity than typical SPA applications but still offers more interactivy and flexibility than server side rendered web sites. _It works well with serverless application and a pub/sub data model_.
+NBHI is developed to create real-time data driven web sites. It has lower complexity than typical SPA applications but still offers more interactivy and flexibility than server side rendered web sites. _It works well with serverless application and a pub/sub data model_.
 
-d--b is designed to be composable with other packages to build web sites. It takes the Lego approach, you select the packages for your needs, no lock-in into a single framework with a potential steep learning curve. d--b is build on standard browser supported technologies which means that you only need to read MDN as the source of knowledge.
+NBHI is designed to be composable with other packages to build web sites. It takes the Lego approach, you select the packages for your needs, no lock-in into a single framework with a potential steep learning curve. NBHI is build on standard browser supported technologies which means that you only need to read MDN as the source of knowledge.
 
-d--b minimizes abstractions, just standard HTML, CSS and Javascript. Migrating from a SPA to d--b's multi page application (MPA) approach should mean you can do this one page at the time not having to migrate your whole system at once and pray that everything keeps working.
+NBHI minimizes abstractions, just standard HTML, CSS and Javascript. Migrating from a SPA to NBHI's multi page application (MPA) approach should mean you can do this one page at the time not having to migrate your whole system at once and pray that everything keeps working.
 
 # Benefits
 
-- Buildless web applications (minification is still possible of course) 👍
-- Lightweight: **~4KB** 👍
+- No-build web applications (you can still make it a dependency via npm install) 👍
+- Lightweight: **~3.9KB** (minified and bundled) 👍
+- No dependencies 👍
 - Benefit from standard web component encapsulation 👍
 - Lazy load page content, when about to enter the viewport 👍
 - Just standard web technologies, little abstractions 👍
-- Composable with other packages
-- Support for web component form fields out of the box 👍
+- Simple single function to hydrate your html (including attributes) 👍
+- Support for form validation for web component based html fields 👍
+- Composable with other packages 👍
 - Multi Page Application (MPA) design
   - The standard method how the web communicates between server and client 👍
   - Normal native routing 👍
   - Better SEO 👍
   - Each page loads what it needs and no more 👍
   - Fast initial draw 👍
+
+# Install
+
+For no-build solutions:
+
+```js
+<script type="module">
+  import { initialize } from 'https://esm.run/nbhi@x.x.x';
+  await initialize();
+</script>
+```
+
+For build solutions
+
+```cli
+npm install nbhi
+```
 
 # Examples
 
@@ -43,30 +62,34 @@ Templates let you build complex systems and reuse components accross multiple pa
 index.html
 
 ```html
-
 <html>
   <body>
     <my-component>Overwritten text</my-component>
 
     <script type="module">
-      import initialize from '/d--b.js';
-      await initialize(); // await if loading external templates
+      import initialize from '/NBHI.js';
+      await initialize(); // await if external templates
     </script>
   </body>
 </html>
-
 ```
 
-/components/my-component.html
+/components/component.html
 
 ```html
-
 <div>
   <slot>Default text</slot>
 </div>
 
 <style>/* Scoped to the web component */</style>
 
+<script>
+  // Runs for each instance, fires on the standard connectedCallback
+  // element is the web component instance
+  export default element => {
+    ...
+  }
+</script>
 ```
 
 ### Internal templates
@@ -74,9 +97,9 @@ index.html
 index.html
 
 ```html
-
 <html>
   <body>
+    <!-- id becomes the name of your web component -->
     <template id="my-component">
       <slot>Default</slot>
       <style>/* Scoped to the web component */</style>
@@ -85,180 +108,202 @@ index.html
     <my-component>Overwrite</my-component>
 
     <script type="module">
-      import initialize from '/d--b.js';
+      import initialize from '/NBHI.js';
       initialize(); // No await needed for internal templates
     </script>
   </body>
 </html>
-
 ```
-
-_Note: When you use an internal `<template>` you need to define an id, which will be the name of the tag._
 
 ## Options
 
 ```js
-
-/**
- * Options for initiating an instance
- * @param {string} [prefix=db]
- * @param {string} [source=/components]
- **/
-
-import initialize from 'd--b.js'
-initialize({
-  // Prefix to use, ie <db-input> or <db-nav>
-  prefix: 'db',
-  // Where to find external web components, if string it will be a director
-  // when using an object the key is the name (without prefix) of the component
-  // and the value the path to the web-component
-  directory: '/components',
-});
-
+initialize({ prefix = 'my', directory = '/components' }); // Defaults
 ```
-
-## Methods
-
-### .setSlot(value, [slotName], [htmlSelector])
 
 ```js
-/**
- * Update data in a <slot> tag
- * @param {string} value - What you want to assign to a <slot>
- * @param {string} [slotName] - If not given value is assigned to default <slot>
- * @param {string} [htmlSelector] - Target a html tag in a complex <slot>
- **/
-
-const element = document.querySelector('my-component');
-
-// To default slot
-element.setSlot('Some text');
-
-// To slot named title
-element.setSlot('Some text', 'title');
-
-// To slot named title and withing the <em> tag
-element.setSlot('Some text', 'title', 'em');
-
+initialize({ prefix: 'x' }); // Components are now x-component
 ```
-
-### .setChildren(data, [wrapperTag])
 
 ```js
-/**
- * Updates one or more records in the child template
- * @param {object|object[]} data - The data to use
- **/
-
-const element = document.querySelector('my-component');
-
-// Update a single child, with data-slot named "title"
-element.setChildren({ title: 'Some value' });
-
+initialize({ components: '/abc' }); // Fetches files in /abc/component.html
 ```
-
-_Note: Child templates always need to extend an existing tag, like `<tr>`, `<option>`, `<div>`, etc. This is because some parents like `<tbody>`, `<select>` will not render regular non extended web components._
-
-### .onceVisible(callback)
 
 ```js
-/**
- * Runs one time when the web component comes into view
- * @param {function} callback - Callback to run
- **/
-document.querySelector('my-component').onceVisible(element => {
-  subscribeToData('someCollection', data => element.setChildren(data));
-});
-
+// key = name of component (no prefix), value is path to file
+initialize({ components: {
+  nav: '/shared/nav.html',
+  dropdown: '/components/dropdown.html'
+} });
 ```
 
-### .checkValidity() (Only if the webcomponent includes a form element)
+## Update a single component (data and attributes)
+
+### Via HTML
+
+```html
+<!-- Instance -->
+<my-component checked data-id="1">
+  Text here will be assigned to the default slot
+  <span slot="title">Will be assigned to the named slot</span>
+</my-component>
+
+<!-- Component definition -->
+<section data-id=""> <!-- Data and custom attributes need to be defined so NBHI can resolve them -->
+  <input type="checkbox"> <!-- NBHI automatically maps common attributes, checked will be placed on the input -->
+  <slot>Default text</slot>
+  <slot name="title">Default title</slot>
+</section>
+```
+
+### Via JS
 
 ```js
-/**
- * Checks if the field is valid
- * @returns boolean
- **/
-document.querySelector('my-form-field').checkValidity();
+import { update } from 'nbhi';
 
+const updater = update('my-component');
+
+updater('Text here will be assigned to the default slot');
+updater({ title: 'Will be assigned to the named slot' });
+updater({ $checked: true, `$data-id`: 1 }); // Atributes are prefixed with $
 ```
 
-### .validity (Only if the webcomponent includes a form element)
+## Update a list (data and attributes)
 
-```js
-/**
- * Get the standard validity object
- * @returns ValidityState
- **/
-document.querySelector('my-form-field').validity;
+### Inline child
 
+/components/component.html
+
+```html
+<div>
+  <h1><slot>Header</slot></h1>
+  <div child> <!-- NBHI uses child attribute to make clones from -->
+    <p data-slot="name"></p> <!-- use data-slot for inline children -->
+  </div>
+</div>
 ```
-
-### .validationMessage() (Only if the webcomponent includes a form element)
-
-```js
-/**
- * Gets the message for an invalid field, handy for bespoke themes
- * @returns string
- **/
-document.querySelector('my-form-field').validationMessage();
-
-```
-
-### Attributes
-
-It is possible to set attributes on a web component instance tag like `<my-component>` and they will automatically be assigned to the correct nodes in the underlying `<template>`. Any changes you make to the `<my-component>` attributes will automatically update the underlying component data.
 
 index.html
 
 ```html
+<my-component>Header overwrite</my-component>
 
-<my-email data-id="1" value="me@me.com" readonly>User Email</my-email>
-
+<script>
+  import { initialize, update } from 'nbhi';
+  await initialize();
+  update('my-component')([
+    { name: 'Record 1' },
+    { name: 'Record 2' },
+  ]);
+</script>
 ```
 
-my-component.html
+### Child component
+
+/components/component.html
 
 ```html
-<!--
-  Custom attributes like data-id need to be defined in the template, otherwise
-  d--b does not know where to assign the value
--->
-<label data-id="">
-  <slot></slot>
-  <!-- d--b knows to add value and read only to the input field --->
-  <input type="email" placeholder="email">
+<div>
+  <h1><slot>Header</slot></h1>
+  <my-child child></my-child> <!-- NBHI uses child attribute to make clones from -->
 </div>
-
 ```
+
+/components/child.html
+
+```html
+<div>
+  <p><slot></slot></p> <!-- use regular slot for nested components -->
+</div>
+```
+
+index.html
+
+```html
+<my-component>Header overwrite</my-component>
+
+<script>
+  import { initialize, update } from 'nbhi';
+  await initialize();
+  update('my-component')([
+    { name: 'Record 1' },
+    { name: 'Record 2' },
+  ]);
+</script>
+```
+
+### List data for `<table>, <ol>, <li> and <option>`
+
+These elements do not support web component children. So for these you can just define the following
+
+index.html
+
+```html
+<template id="my-table">
+  <table>
+    <thead>
+      <tr>
+        <th>Header</th>
+      </tr>
+    </thead>
+    <tbody> <!-- Required -->
+      <tr> <!-- No need for child attribute -->
+        <td data-slot="name"></td>
+      </tr>
+    </tbody>
+  </table>
+</template>
+
+index.html
+
+<my-table></my-table>
+
+<script>
+  import { initialize, update } from 'nbhi';
+  await initialize();
+  update('my-table')([
+    { name: 'Record 1' },
+    { name: 'Record 2' },
+  ]);
+</script>
+```
+
+Some logic for `<ol>`, `<ul>` and `<option>`
+
+## Lazy loading
 
 ```js
+import { onceVisible } form 'nbhi';
 
-// Calling from JS is also easier, you don't need to find the shadowRoot
-const element = document.querySelector('my-component')
-element.setAttribute('value', 'Some value');
-element.disabled = true;
-
+onceVisible('my-component', element => ...); // Will run once it comes in view (200px before)
 ```
 
-_Note: If there are multiple elements that can have an attribute that has been defined on the component instance it will assign it to all instances. You can assign attributes to the `<template>` tag but only if it extends an existing tag_
+## Validating a form field
 
-# FAQ
+```js
+import { validate } form 'nbhi';
 
-### How to pronounce d--b?
-However you like.
+const internals = validate('my-form-field'); // Returns elementInternals
+
+// See MDN for details
+internals.checkValidity();
+internals.validity;
+```
+
+## FAQ
 
 ### No build steps is nice, but I want to use TypeScript
+
 If you want to use TS you have a couple of options. You can either add a build step, nothing is stopping you, the library supports it. If you want to stay buildless but want to add some sort of type checking and hinting you can consider using JSDoc, it is [supported](https://www.typescriptlang.org/docs/handbook/jsdoc-supported-types.html#author) in TS as well.
 
 ### Creating interactivity is verbose with native js DOM manipulation
-d--b is not designed to be a single solution for everything, if you want to make DOM manipulation for interactivity easier I would suggest using dedicated libraries for that. You can consider [Alpine.js](https://alpinejs.dev/) or [Umbrella.js](https://umbrellajs.com/) for example. d--b is designed with composibility in mind so you decide what to add.
 
-### External npm packages require me the add build steps again
-You could load them from a CDN if you want to stay 100% buildless, otherwise you could just add a simple minifier and bundler. This will stay very lightweight but probably is more suitable for production environments.
+NBHI is not designed to be a single solution for everything, if you want to make DOM manipulation for interactivity easier I would suggest using dedicated libraries for that. You can consider [Alpine.js](https://alpinejs.dev/) or [Umbrella.js](https://umbrellajs.com/) for example. NBHI is designed with composibility in mind so you decide what to add.
 
 ### Anybody using web component technology?
+
 Just check out the source code of github.com or youtube.com.
 
 ### We are a team of multiple developers, using a framework ensures we write similar code
+
 You are correct, when you choose a more opinionated framework it will most likely give more cohesive code overall when you work with multiple developers. However it also gives you lock-in. It is a trade-off that you have to make, depending on the team size and how agile your codebase needs to remain.
