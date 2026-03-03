@@ -22,7 +22,7 @@
     "url": "git+https://github.com/royniels/nbhi.git"
   },
   "files": [
-    "./javascript/index.js",
+    "./javascript/index.js"
   ],
   "exports": {
     ".": "./javascript/index.js"
