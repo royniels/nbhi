@@ -1,6 +1,40 @@
 {
-  "devDependencies": {
-    "eslint": "^10.0.2",
-    "eslint-plugin-html": "^8.1.4"
+  "name": "d--b",
+  "version": "0.5.0",
+  "description": "d--b is a simple **3KB** library that allows you to include html files into other html files and turns them into [web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components). Lazy initialization of content (when entering the viewport) and a one line call to update/hydrate content in your html pages. No build tools required, no `package.json` needed.",
+  "keywords": [
+    "web-components",
+    "html",
+    "includes",
+    "no-build",
+    "hydration",
+    "form-validation",
+    "lazy-loading",
+    "mpa",
+    "multi",
+    "page",
+    "application",
+    "composable"
+  ],
+  "homepage": "https://github.com/royniels/d--b#readme",
+  "bugs": {
+    "url": "https://github.com/royniels/d--b/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/royniels/d--b.git"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "update.js": "./dist/update.js",
+    "onceVisible": "./dist/onceVisible.js",
+    "validate": "./dist/validate.js"
+  },
+  "license": "MIT",
+  "author": "Roy Niels",
+  "type": "module",
+  "main": "eslint.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
   }
 }

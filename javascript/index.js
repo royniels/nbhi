@@ -1,6 +1,6 @@
 import { getAttributeMapping, updateAttributes } from './attributes.js';
 
-export default async ({ prefix = 'db', source = '/components', attributes = {} } = {}) => {
+export default async ({ prefix = 'db', source = '/components' } = {}) => {
   const registerCache = new Set();
   const fileCache = new Set();
 
@@ -91,7 +91,7 @@ export default async ({ prefix = 'db', source = '/components', attributes = {} }
     registerCache.add(name);
 
     const isFormControl = !!template.content.querySelector('input, select, textarea');
-    const attributeMapping = getAttributeMapping(template.content, attributes);
+    const attributeMapping = getAttributeMapping(template.content);
 
     customElements.define(name, class extends HTMLElement {
       static observedAttributes = Object.keys(attributeMapping);

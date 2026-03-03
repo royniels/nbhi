@@ -1,7 +1,58 @@
 export { getAttributeMapping, updateAttributes };
 
-function getAttributeMapping(element, extending = {}) {
-  const { keyValue, excludedAttributes, excludedElements, boolean: binary } = extendAttributeMapping();
+const mapping = {
+  boolean: {
+    autofocus: ['button', 'input', 'select', 'textarea'],
+    autoplay: ['audio', 'video'],
+    checked: ['input'],
+    controls: ['audio', 'video'],
+    default: ['track'],
+    defer: ['script'],
+    disabled: ['button', 'input', 'optgroup', 'option', 'select', 'textarea', 'fieldset'],
+    formnovalidate: ['button', 'input'],
+    ismap: ['img'],
+    loop: ['audio', 'video'],
+    multiple: ['input', 'select'],
+    muted: ['audio', 'video'],
+    novalidate: ['form'],
+    open: ['details', 'dialog'],
+    playsinline: ['video'],
+    readonly: ['input', 'textarea'],
+    required: ['input', 'select', 'textarea'],
+    reversed: ['ol'],
+  },
+  keyValue: {
+    accept: ['input'],
+    autocomplete: ['input', 'select', 'textarea'],
+    cols: ['textarea'],
+    dirname: ['input', 'textarea'],
+    max: ['input'],
+    maxlength: ['input', 'textarea'],
+    min: ['input'],
+    minlength: ['input', 'textarea'],
+    name: ['input', 'select', 'textarea'],
+    pattern: ['input'],
+    placeholder: ['input', 'textarea'],
+    rows: ['textarea'],
+    size: ['input', 'select'],
+    step: ['input'],
+    type: ['input'],
+    value: ['input', 'select'],
+    width: ['input'],
+    wrap: ['textarea'],
+    htmlFor: ['label'],
+    for: ['label'],
+    href: ['a'],
+    target: ['a'],
+    src: ['audio', 'img', 'input', 'video'],
+    'aria-invalid': ['input', 'textarea', 'select'],
+  },
+  excludedAttributes: ['class', 'extends', 'id', 'part', 'data-slot', 'child'],
+  excludedElements: ['slot', 'template', 'style', 'script'],
+};
+
+function getAttributeMapping(element) {
+  const { keyValue, excludedAttributes, excludedElements, boolean: binary } = mapping;
   const results = {};
   traverse(element);
   return results;
@@ -41,78 +92,6 @@ function getAttributeMapping(element, extending = {}) {
       }
     }
     [...element.children].forEach(child => traverse(child));
-  }
-
-  function extendAttributeMapping() {
-    const mapping = {
-      boolean: {
-        autofocus: ['button', 'input', 'select', 'textarea'],
-        autoplay: ['audio', 'video'],
-        checked: ['input'],
-        controls: ['audio', 'video'],
-        default: ['track'],
-        defer: ['script'],
-        disabled: ['button', 'input', 'optgroup', 'option', 'select', 'textarea', 'fieldset'],
-        formnovalidate: ['button', 'input'],
-        ismap: ['img'],
-        loop: ['audio', 'video'],
-        multiple: ['input', 'select'],
-        muted: ['audio', 'video'],
-        novalidate: ['form'],
-        open: ['details', 'dialog'],
-        playsinline: ['video'],
-        readonly: ['input', 'textarea'],
-        required: ['input', 'select', 'textarea'],
-        reversed: ['ol'],
-      },
-      keyValue: {
-        accept: ['input'],
-        autocomplete: ['input', 'select', 'textarea'],
-        cols: ['textarea'],
-        dirname: ['input', 'textarea'],
-        max: ['input'],
-        maxlength: ['input', 'textarea'],
-        min: ['input'],
-        minlength: ['input', 'textarea'],
-        name: ['input', 'select', 'textarea'],
-        pattern: ['input'],
-        placeholder: ['input', 'textarea'],
-        rows: ['textarea'],
-        size: ['input', 'select'],
-        step: ['input'],
-        type: ['input'],
-        value: ['input', 'select'],
-        width: ['input'],
-        wrap: ['textarea'],
-        htmlFor: ['label'],
-        for: ['label'],
-        href: ['a'],
-        target: ['a'],
-        src: ['audio', 'img', 'input', 'video'],
-      },
-      excludedAttributes: ['class', 'extends', 'id', 'part', 'data-slot', 'child'],
-      excludedElements: ['slot', 'template', 'style', 'script'],
-    };
-
-    Object.entries(extending).forEach(([key, { excluded = false, type, elements = [] }]) => {
-      if (excluded === true) {
-        mapping.excludedAttributes = [...new Set([...mapping.excludedAttributes, key])];
-      } else if (type === 'boolean' && Array.isArray(elements)) {
-        merge(mapping.boolean);
-      } else if (type === 'keyValue' && Array.isArray(elements)) {
-        merge(mapping.keyValue);
-      }
-
-      function merge(source) {
-        if (!Array.isArray(source[key])) {
-          source[key] = elements;
-        } else {
-          source[key] = [...new Set([...source[key], ...elements])];
-        }
-      }
-    });
-
-    return mapping;
   }
 };
 

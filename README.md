@@ -20,6 +20,7 @@ d--b minimizes abstractions, just standard HTML, CSS and Javascript. Migrating f
 - Lazy load page content, when about to enter the viewport 👍
 - Just standard web technologies, little abstractions 👍
 - Composable with other packages
+- Support for web component form fields out of the box 👍
 - Multi Page Application (MPA) design
   - The standard method how the web communicates between server and client 👍
   - Normal native routing 👍
@@ -29,7 +30,7 @@ d--b minimizes abstractions, just standard HTML, CSS and Javascript. Migrating f
 
 # Examples
 
-Please look in the **examples-external-templates.html** and the **examples-inpage-templates.html** for working examples
+Please look in the **examples.html** for working examples.
 
 # How?
 
@@ -100,39 +101,18 @@ _Note: When you use an internal `<template>` you need to define an id, which wil
 
 /**
  * Options for initiating an instance
- * @param {string} [prefix=b] - Set the part before the '-', <b-yourtag></b-yourtag>
- * @param {string} [directory=/components] - Where components should be stored
- * @param {flat|tree} [structure=flat] - saves nested or at the root of directory,
- * @param {object.<string, string>} [aliases]- Map long tag names to shorter versions
- * @param {object.<string, string>} [keyValueAttributes]- Add key value attributes to known list
- * @param {object.<string, string>} [booleanAttributes]- Add boolean attributes to known list
- * @param {string[]} [attributeBlackList]- Attributes should not auto update
+ * @param {string} [prefix=db]
+ * @param {string} [source=/components]
  **/
 
 import initialize from 'd--b.js'
 initialize({
-  prefix: 'a',
+  // Prefix to use, ie <db-input> or <db-nav>
+  prefix: 'db',
+  // Where to find external web components, if string it will be a director
+  // when using an object the key is the name (without prefix) of the component
+  // and the value the path to the web-component
   directory: '/components',
-  // How files should be saved in the directory, files on disk use no prefix:
-  // flat: <b-field-input>, saved as "/components/field-input.html"
-  // tree: <b-field-input>, saved as "/components/field/input.html"
-  structure: 'flat',
-  // Use to shorten a name or rename it
-  aliases: { 'some-very-long-tag-name': 'short-name' },
-  // Assign key value attributes that you want to be automatically recognized
-  // Property is the name of the attribute and the value is an array of tags
-  // that should receive the property if added to <my-component newattr="2">
-  keyValueAttributes: {
-    newattr: ['div', 'input']
-  },
-  // Same as above, except that it is a binary attribute that doesn't have a
-  // value like <my-component newattr>
-  booleanAttributes: {
-    newattr: ['div', 'input']
-  },
-  // Attributes in this list will not auto update, <my-component value=""> will
-  // not be set on any children
-  attributeBlackList: ['value']
 });
 
 ```
