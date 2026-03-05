@@ -1,0 +1,8 @@
+<div></div>
+
+<script>
+  export default async (element, importer) => {
+    const logger = (await importer('/examples/logger.js')).default;
+    logger('Logging from an external file');
+  }
+</script>

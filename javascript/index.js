@@ -115,7 +115,10 @@ async function initialize({ prefix = 'db', source = '/components' } = {}) {
 
       connectedCallback() {
         if (typeof script === 'function') {
-          script(this);
+          script(this, path => {
+            const baseUrl = new URL('./', import.meta.url).origin;
+            return import(`${ baseUrl }${ path }`);
+          });
         }
       }
 

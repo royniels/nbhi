@@ -86,7 +86,12 @@ index.html
 <script>
   // Runs for each instance, fires on the standard connectedCallback
   // element is the web component instance
-  export default element => {
+  export default await (element, importer) => {
+    // Path needs to be from the root of your project
+    // Use the importer to load files, it will make the path absolute in order
+    // to load the file. As the script tag is cloned and injected it has no
+    // sense of where it lives so it needs absolute paths
+    const { x } = await importer('/file/toLoad.js');
     ...
   }
 </script>
