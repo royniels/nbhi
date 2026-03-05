@@ -73,7 +73,7 @@ async function initialize({ prefix = 'db', source = '/components' } = {}) {
             ? `${ source }/${ fileName }.html` : source[fileName];
           const response = await fetch(relativePath);
           if (!response.ok) {
-            throw new Error(`Could not find component @ ${ relativePath }`);
+            throw new Error(`Could not find component ${ name }`);
           }
           const templateAsString = await response.text();
           const document = new DOMParser().parseFromString(templateAsString, 'text/html');

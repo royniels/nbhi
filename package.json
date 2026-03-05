@@ -1,6 +1,6 @@
 {
   "name": "nbhi",
-  "version": "0.6.6",
+  "version": "0.6.8",
   "description": "No-Build HTML Includes (NBHI) is a simple library that allows you to include html files into other html files and turns them into [web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components). Lazy initialization of content (when entering the viewport) and a one line call to update/hydrate content in your html pages. No build tools required, no `package.json` needed.",
   "keywords": [
     "web-components",

@@ -99,7 +99,11 @@ function updateAttributes({ name, value, attributeMapping, root }) {
   const { type, tagNames = [] } = attributeMapping[name] ?? [];
 
   if (type === 'userDefined') {
-    process(root.querySelector(`[${ name }]`));
+    if (root.hasAttribute && root.hasAttribute(name)) {
+      process(root);
+    } else {
+      process(root.querySelector(`[${ name }]`));
+    }
   } else {
     tagNames.forEach(tagName => {
       root.querySelectorAll(tagName).forEach(process);

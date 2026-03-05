@@ -67,7 +67,7 @@ index.html
     <my-component>Overwritten text</my-component>
 
     <script type="module">
-      import initialize from '/NBHI.js';
+      import initialize from '/nbhi.js';
       await initialize(); // await if external templates
     </script>
   </body>
@@ -108,7 +108,7 @@ index.html
     <my-component>Overwrite</my-component>
 
     <script type="module">
-      import initialize from '/NBHI.js';
+      import initialize from '/nbhi.js';
       initialize(); // No await needed for internal templates
     </script>
   </body>
