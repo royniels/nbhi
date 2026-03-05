@@ -2,7 +2,7 @@
 
 **HTML includes and reactive rendering, all without any build tools**
 
-No-build HTML includes (NBHI) is a simple **3.9KB** library that allows you to include html files into other html files and turns them into [web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components). Lazy initialization of content (when entering the viewport) and a one line call to update/hydrate content and attributes in your html pages. No build tools required, no `package.json` needed.
+No-build HTML includes (NBHI) is a simple **4.3KB** library that allows you to include html files into other html files and turns them into [web components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components). Lazy initialization of content (when entering the viewport) and a one line call to update/hydrate content and attributes in your html pages. No build tools required, no `package.json` needed.
 
 # Why?
 
@@ -15,7 +15,7 @@ NBHI minimizes abstractions, just standard HTML, CSS and Javascript. Migrating f
 # Benefits
 
 - No-build web applications (you can still make it a dependency via npm install) 👍
-- Lightweight: **~3.9KB** (minified and bundled) 👍
+- Lightweight: **~4.3KB** (minified and bundled) 👍
 - No dependencies 👍
 - Benefit from standard web component encapsulation 👍
 - Lazy load page content, when about to enter the viewport 👍
