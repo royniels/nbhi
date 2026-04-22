@@ -124,7 +124,7 @@ function updateAttributes({ name, value, attributeMapping, root }) {
       } else {
         element.setAttribute(name, value);
         // Triggers <select> to update the selected <option>
-        if (name === 'value') {
+        if (name === 'value' && element.localName === 'select') {
           element.value = value;
         }
       }
