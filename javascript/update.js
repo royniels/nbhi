@@ -73,15 +73,15 @@ export default selector => {
         element.localName === 'li' ||
         (element.hasAttribute('child') && !element.shadowRoot)) {
         if (element.hasAttribute('data-slot') && element.dataset.slot === name) {
-          element.textContent = value;
+          element.innerHTML = value;
         } else {
           const match = element.querySelector(`[data-slot="${ name }"]`);
           if (match) {
-            match.textContent = value;
+            match.innerHTML = value;
           }
         }
-      } else if (!name && element.textContent !== value) {
-        element.textContent = value;
+      } else if (!name && element.innerHTML !== value) {
+        element.innerHTML = value;
       } else {
         let slot = element.querySelector(`[slot="${ name }"]`);
         if (!slot) {
@@ -90,8 +90,8 @@ export default selector => {
           element.append(slot);
         }
 
-        if (slot.textContent !== value) {
-          slot.textContent = value;
+        if (slot.innerHTML !== value) {
+          slot.innerHTML = value;
         }
       }
     }

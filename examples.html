@@ -34,6 +34,8 @@
 
     <x-slots class="js-slots"></x-slots>
 
+    <x-slots class="js-slots-html"></x-slots>
+
     <hr>
 
     <h2>Attributes</h2>
@@ -74,13 +76,14 @@
     await initialize({ prefix: 'x', source: '/examples' });
 
     const updater = update('.js-slots');
-    updater('Default slot overwritten with JS');
+    updater('Default slot <em>overwritten</em> with JS');
     update('.js-slots')({ title: 'Named slot overwritten with JS' });
+    update('.js-slots-html')({ title: 'Named slot overwritten with JS and has <strong>HTML</strong>' });
     update('.js-attr')({ $value: 'Attributes set via JS', $disabled: true })
 
     update('x-table')([
-      { em: 'Italic', strong: 'and bold 1', description: 'My description 1', '$data-id': 1 },
-      { em: 'Italic', strong: 'and bold 2', description: 'My description 2', '$data-id': 2 },
+      { title: '<em>Title</em>', description: 'My <em>description 1</em>', '$data-id': 1 },
+      { title: 'Title', description: 'My description 2', '$data-id': 2 },
     ]);
 
     update('x-ul')([
@@ -96,14 +99,14 @@
     update('x-select')({ $value: 'Value 2' });
 
     update('x-child')([
-      { title: 'My title 1', description: 'My description 1' },
+      { title: '<em>My title 1</em>', description: 'My description 1' },
       { title: 'My title 2', description: 'My description 2' },
     ]);
 
-    update('x-nested-unnamed')(['My title 1', 'My title 2']);
+    update('x-nested-unnamed')(['<em>My title 1</em>', 'My title 2']);
 
     update('x-nested-named')([
-      { title: 'My title 1', description: 'My description 1' },
+      { title: '<em>My title 1</em>', description: 'My description 1' },
       { title: 'My title 2', description: 'My description 2' },
     ]);
 
