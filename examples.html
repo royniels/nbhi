@@ -67,6 +67,17 @@
 
     <x-importer></x-importer>
 
+    <div class="inline">
+      <div child>
+        <p data-slot="title"></p>
+        <div class="subParent">
+          <div child>
+            <p data-slot="subTitle"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <script type="module">
@@ -109,6 +120,16 @@
       { title: '<em>My title 1</em>', description: 'My description 1' },
       { title: 'My title 2', description: 'My description 2' },
     ]);
+
+    update('.inline')([
+      { title: 'Title A Inline' },
+      { title: 'Title B Inline' },
+    ]);
+
+    update('.inline div:first-child .subParent')([
+      { subTitle: 'Sub-title A Inline' },
+      { subTitle: 'Sub-title B Inline' },
+    ])
 
     const end = performance.now();
     console.log(`Registered all components in ${Math.round(end - start)} ms`);

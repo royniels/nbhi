@@ -8,6 +8,7 @@ export default selector => {
   let renderedChildren = new Map();
   let idCount = 1;
   let templateChild;
+  let templateParent;
 
   return data => {
     if (isDate(data)) {
@@ -154,6 +155,10 @@ export default selector => {
       };
 
       function getParent() {
+        if (templateParent) {
+          return templateParent;
+        }
+
         const topLevel = getTopLevel();
         if (topLevel.localName === 'table') {
           return process('tbody', 'tr');
@@ -198,6 +203,7 @@ export default selector => {
             console.log({ topLevel, parentName });
             throw new Error('Cannot find parent');
           }
+          templateParent = parent;
           return parent;
         }
 
