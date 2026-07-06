@@ -99,11 +99,6 @@ export default selector => {
 
     function updateList(records) {
       const parent = getParent();
-
-      if (!templateChild) {
-        throw new Error(`Cannot update ${ selector }, cannot find child element`);
-      }
-
       const newChildren = new Map();
 
       records.forEach((record, index) => {
@@ -158,7 +153,6 @@ export default selector => {
         if (templateParent) {
           return templateParent;
         }
-
         const topLevel = getTopLevel();
         if (topLevel.localName === 'table') {
           return process('tbody', 'tr');
@@ -170,6 +164,7 @@ export default selector => {
           return process('select', 'option');
         } else if (topLevel.querySelector('[child]')) {
           const parent = getParent(topLevel.querySelector('[child]')).parentElement;
+          templateParent = parent;
           setTemplateChild('[child]', parent);
           if (parent.localName === 'slot' && parent.hasAttribute('name')) {
             templateChild.slot = parent.getAttribute('name');
@@ -183,6 +178,7 @@ export default selector => {
         function process(parentName, childName) {
           const parent = getParent(parentName);
           setTemplateChild(childName, parent);
+          templateParent = parent;
           return parent;
         }
 
@@ -203,7 +199,6 @@ export default selector => {
             console.log({ topLevel, parentName });
             throw new Error('Cannot find parent');
           }
-          templateParent = parent;
           return parent;
         }
 
