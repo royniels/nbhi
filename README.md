@@ -272,6 +272,8 @@ index.html
 
 Same logic for `<ol>`, `<ul>` and `<option>`
 
+When a record has an `id` (string or number), its rendered element is reused for the next record with the same `id`, even when that is a new object (for example after reloading the data). The element stays in the DOM and is updated in place. Records without an `id` are matched by object identity.
+
 ## Lazy loading
 
 ```js

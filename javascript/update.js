@@ -141,6 +141,10 @@ export default selector => {
 
       function getId(record, index) {
         if (record && typeof record === 'object') {
+          const recordId = record.id;
+          if (['string', 'number'].includes(typeof recordId) && !newChildren.has(`id:${ recordId }`)) {
+            return `id:${ recordId }`;
+          }
           if (!idCache.has(record)) {
             idCache.set(record, idCount++);
           }
