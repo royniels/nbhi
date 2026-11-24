@@ -1,0 +1,42 @@
+<span nb-text="label"></span>
+<button nb-ref="remove" aria-label="Remove">×</button>
+
+<style>
+  :host {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0 6px 6px 0;
+    padding: 2px 4px 2px 12px;
+    background: var(--sea-1);
+    color: var(--ink);
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  button {
+    font: inherit;
+    line-height: 1;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    color: var(--ink);
+    background: rgb(255 255 255 / 0.45);
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: var(--coral);
+    color: #fff;
+  }
+</style>
+
+<script type="module">
+  export default element => {
+    element.refs.remove.addEventListener('click', () => {
+      element.dispatchEvent(new CustomEvent('remove', { bubbles: true, detail: { label: element.label } }));
+    });
+  };
+</script>

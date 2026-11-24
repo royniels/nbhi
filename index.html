@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NBHI · Web components without a build step</title>
+  <meta name="description" content="NBHI turns plain HTML templates into web components. Bindings become properties, rows() renders lists, and a component with a form field is a real form control. No build tools.">
+
+  <script>
+    try {
+      const theme = localStorage.getItem('nbhi.theme');
+      if (theme === 'light' || theme === 'dark') {
+        document.documentElement.dataset.theme = theme;
+      }
+    } catch (error) {
+      console.warn('Could not read the chosen theme', error);
+    }
+  </script>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "nbhi": "./javascript/index.js",
+        "logger": "./site/logger.js"
+      }
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=JetBrains+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="./site/style.css">
+</head>
+
+<body>
+
+  <header class="hero">
+    <nav class="topBar" aria-label="Site">
+      <a class="brand" href="#">NBHI</a>
+      <div class="topLinks">
+        <a href="https://github.com/royniels/nbhi">GitHub</a>
+        <a href="https://www.npmjs.com/package/nbhi">npm</a>
+        <button type="button" class="themeToggle">Night</button>
+      </div>
+    </nav>
+
+    <div class="heroContent">
+      <div class="heroText">
+        <span class="eyebrow">Version 1.0</span>
+        <h1>No build. Just HTML.</h1>
+        <p class="tagline">NBHI turns plain HTML templates into web components. No bundler, no compiler, no framework to learn.</p>
+        <div class="heroActions">
+          <a class="button primary" href="#install">Get started</a>
+          <a class="button secondary" href="#properties">See it work</a>
+        </div>
+      </div>
+
+      <div class="island" aria-hidden="true">
+        <div class="sun"></div>
+        <svg class="palm" viewBox="0 0 200 270" xmlns="http://www.w3.org/2000/svg">
+          <ellipse class="mound" cx="108" cy="262" rx="86" ry="18" />
+          <path class="trunk" d="M120 258 C 116 205, 98 150, 101 94" stroke-width="13" stroke-linecap="round" fill="none" />
+          <g class="fronds">
+            <path class="frond back" d="M101 92 C 84 56, 58 40, 30 44 C 60 56, 80 72, 99 98 Z" />
+            <path class="frond back" d="M101 92 C 120 54, 148 40, 176 46 C 148 56, 124 72, 103 98 Z" />
+            <path class="frond" d="M101 92 C 70 70, 38 80, 14 114 C 44 94, 72 92, 101 99 Z" />
+            <path class="frond" d="M101 92 C 132 68, 168 76, 192 110 C 162 92, 134 92, 101 99 Z" />
+            <path class="frond" d="M101 92 C 99 62, 106 36, 122 18 C 114 46, 110 68, 105 96 Z" />
+            <circle class="coconut" cx="96" cy="101" r="6" />
+            <circle class="coconut" cx="107" cy="103" r="6" />
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <svg class="waves" viewBox="0 0 1440 150" preserveAspectRatio="none" aria-hidden="true">
+      <path class="wave1" d="M0 60 C 180 20, 360 100, 540 60 S 900 20, 1080 60 S 1320 100, 1500 60 L 1500 150 L 0 150 Z" />
+      <path class="wave2" d="M0 85 C 200 50, 400 120, 600 85 S 1000 50, 1200 85 S 1400 110, 1500 90 L 1500 150 L 0 150 Z" />
+      <path class="wave3" d="M0 108 C 240 84, 480 132, 720 108 S 1200 84, 1440 108 L 1440 150 L 0 150 Z" />
+      <path class="shore" d="M0 130 C 240 118, 480 142, 720 130 S 1200 118, 1440 130 L 1440 150 L 0 150 Z" />
+    </svg>
+  </header>
+
+  <div class="layout">
+    <nav class="contents" aria-label="On this page">
+      <p>On this page</p>
+      <ol>
+        <li><a href="#introduction">Introduction</a></li>
+        <li><a href="#install">Install</a></li>
+        <li><a href="#components">Defining components</a></li>
+        <li><a href="#properties">Properties</a></li>
+        <li><a href="#nested">Nested components</a></li>
+        <li><a href="#refs">Refs</a></li>
+        <li><a href="#events">Events</a></li>
+        <li><a href="#lists">Lists</a></li>
+        <li><a href="#forms">Forms</a></li>
+        <li><a href="#reference">Reference</a></li>
+        <li><a href="#upgrading">Upgrading from 0.x</a></li>
+      </ol>
+    </nav>
+
+    <main>
+
+      <section id="introduction">
+        <h2>Introduction</h2>
+        <p class="intro">NBHI (No-Build HTML Includes) turns HTML templates into <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_components">web components</a>. You write a component as an HTML file, or as a <code>&lt;template&gt;</code> in your page, and NBHI defines it. The template says which parts of the component can change, and NBHI gives the component a property for each of them. You update a component by setting its properties, the same way you set <code>value</code> on an <code>&lt;input&gt;</code> or <code>src</code> on an <code>&lt;img&gt;</code>.</p>
+
+        <ul class="features">
+          <li><strong>Loads components</strong> from HTML files or inline templates, also when they are added to the page later.</li>
+          <li><strong>Gives components properties</strong> from bindings in their template.</li>
+          <li><strong>Renders lists</strong> into tables, lists and selects with one helper, <code>rows()</code>.</li>
+          <li><strong>Makes form fields real</strong>: a component with a field works in forms, <code>FormData</code> and validation.</li>
+        </ul>
+
+        <p>Everything else is standard HTML, CSS and JavaScript. If you know MDN, you know NBHI. Every example on this page runs on NBHI itself.</p>
+      </section>
+
+      <section id="install">
+        <h2>Install</h2>
+        <p>No build step is needed. Map the package in an import map and import it in a module script:</p>
+        <pre><code class="language-html">&lt;script type="importmap"&gt;
+  { "imports": { "nbhi": "https://cdn.jsdelivr.net/npm/nbhi@1.0.0/javascript/index.js" } }
+&lt;/script&gt;
+
+&lt;script type="module"&gt;
+  import { initialize } from 'nbhi';
+  await initialize();
+&lt;/script&gt;</code></pre>
+        <p>Or install it with <code>npm install nbhi</code>.</p>
+      </section>
+
+      <section id="components">
+        <h2>Defining components</h2>
+
+        <h3>Options</h3>
+        <pre><code class="language-javascript">initialize({
+  prefix: 'nb',             // components are &lt;nb-...&gt; elements (the default)
+  source: '/components',    // &lt;nb-card&gt; loads /components/card.html (the default)
+});</code></pre>
+        <p>With <code>prefix: 'app'</code>, the components are <code>&lt;app-card&gt;</code>, <code>&lt;app-nav&gt;</code> and so on. <code>source</code> can also be a map from the name without the prefix to a file:</p>
+        <pre><code class="language-javascript">initialize({
+  source: {
+    card: '/shared/components/card.html',
+    nav: '/components/navigation.html',
+  },
+});</code></pre>
+
+        <h3>A component in its own file</h3>
+        <pre><span class="fileName">/components/card.html</span><code class="language-html">&lt;article&gt;
+  &lt;h3 nb-text="heading"&gt;&lt;/h3&gt;
+  &lt;!-- A standard web component slot, NBHI doesn't touch it --&gt;
+  &lt;slot&gt;&lt;/slot&gt;
+&lt;/article&gt;
+
+&lt;style&gt;
+  /* Scoped to the component */
+  h3 { margin: 0; }
+&lt;/style&gt;
+
+&lt;script type="module"&gt;
+  import logger from 'logger';
+
+  export default element =&gt; {
+    // Runs once for every instance, the first time it is added to the page.
+    // element is the instance.
+    logger(`The card "${ element.heading }" is on the page`);
+  };
+&lt;/script&gt;</code></pre>
+        <p>The script's default export runs with the element. Its imports go through the page's import map, for packages and for your own modules alike:</p>
+        <pre><code class="language-html">&lt;script type="importmap"&gt;
+  {
+    "imports": {
+      "nbhi": "https://cdn.jsdelivr.net/npm/nbhi@1.0.0/javascript/index.js",
+      "logger": "/javascript/logger.js"
+    }
+  }
+&lt;/script&gt;</code></pre>
+        <p class="note">Use names from the import map or full URLs. A relative path (<code>./logger.js</code>) or a path from the root (<code>/javascript/logger.js</code>) doesn't work in a component script: NBHI runs it from a <code>blob:</code> URL, which has no folder to resolve such a path from.</p>
+        <p>The page uses it like any element:</p>
+        <pre><code class="language-html">&lt;nb-card heading="Getting started"&gt;A short introduction to web components.&lt;/nb-card&gt;</code></pre>
+
+        <div class="demo">
+          <nb-card heading="Getting started">A short introduction to web components. Open the console: the card's script logged a line when it arrived.</nb-card>
+        </div>
+
+        <h3>A component in the page</h3>
+        <p>A <code>&lt;template&gt;</code> whose id starts with the prefix is a component. Other templates are left alone, so you can still use <code>&lt;template&gt;</code> for your own purposes.</p>
+        <pre><code class="language-html">&lt;template id="nb-greeting"&gt;
+  &lt;p&gt;Hello &lt;strong nb-text="name"&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;/template&gt;
+
+&lt;nb-greeting name="island"&gt;&lt;/nb-greeting&gt;</code></pre>
+
+        <template id="nb-greeting">
+          <p>Hello <strong nb-text="name"></strong></p>
+          <style>
+            p {
+              margin: 0;
+              font-size: 1.1rem;
+            }
+
+            strong {
+              color: var(--coral);
+            }
+          </style>
+        </template>
+
+        <div class="demo">
+          <nb-greeting name="island"></nb-greeting>
+        </div>
+
+        <h3>Components added later</h3>
+        <p>NBHI watches the page and the inside of every component. A component that a script adds later, with <code>append()</code>, <code>innerHTML</code> or inside another component, is loaded and defined as soon as it appears. To use it straight away, wait until it is defined:</p>
+        <pre><code class="language-javascript">list.insertAdjacentHTML('beforeend', '&lt;nb-card&gt;&lt;/nb-card&gt;');
+await customElements.whenDefined('nb-card');</code></pre>
+
+        <h3>Sharing page styles</h3>
+        <p>A component's styles are scoped to it. To let every component use a stylesheet of the page too (a CSS framework, your typography), mark it with <code>data-inherit</code>:</p>
+        <pre><code class="language-html">&lt;link rel="stylesheet" href="/stylesheets/pico.css" data-inherit="true"&gt;</code></pre>
+        <p>NBHI reads it once and shares it with every component. CSS custom properties need nothing: they are inherited inside like any other inherited style. That's how the components on this page use the island's colours.</p>
+      </section>
+
+      <section id="properties">
+        <h2>Properties</h2>
+        <p>The template decides what can change. Two bindings create properties:</p>
+        <div class="tableWrapper">
+          <table>
+            <thead>
+              <tr><th>Binding</th><th>What the property sets</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>nb-text="heading"</code></td><td>the text of the element</td></tr>
+              <tr><td><code>:href="link"</code></td><td>the <code>href</code> of the element (any attribute works: <code>:src</code>, <code>:disabled</code>, <code>:data-state</code>, ...)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Everything NBHI reads in a template starts with <code>nb-</code> or <code>:</code>. <code>data-*</code> attributes are never NBHI syntax, they stay yours.</p>
+        <pre><code class="language-html">&lt;template id="nb-author"&gt;
+  &lt;h3 nb-text="name"&gt;&lt;/h3&gt;
+  &lt;p nb-text="bio"&gt;&lt;/p&gt;
+  &lt;a :href="link"&gt;Open profile&lt;/a&gt;
+&lt;/template&gt;</code></pre>
+        <pre><code class="language-javascript">const author = document.querySelector('nb-author');
+author.name = 'Jane Doe';
+author.bio = 'Writes about web components.';
+author.link = '/authors/jane-doe';</code></pre>
+
+        <template id="nb-author">
+          <h3 nb-text="name"></h3>
+          <p nb-text="bio"></p>
+          <a :href="link">Open profile</a>
+          <style>
+            :host {
+              display: block;
+              background: var(--sand);
+              border: 1px solid var(--sand-2);
+              border-radius: 14px;
+              padding: 16px 18px;
+            }
+
+            h3 {
+              font-family: var(--font-display);
+              font-size: 1.25rem;
+              margin: 0;
+            }
+
+            p {
+              margin: 4px 0 8px;
+              color: var(--ink-soft);
+            }
+
+            a {
+              color: var(--link);
+            }
+          </style>
+        </template>
+
+        <div class="demo">
+          <nb-author class="author"></nb-author>
+          <div class="controls">
+            <label>name <input class="authorName" value="Jane Doe"></label>
+            <label>bio <input class="authorBio" value="Writes about web components."></label>
+            <button type="button" class="chip injectBio">Try some HTML in bio</button>
+          </div>
+          <div class="log authorLog"></div>
+        </div>
+
+        <h3>One name, every element that uses it</h3>
+        <p>A property updates every element that binds it. Elements that have the same attribute with a different meaning get different names. Nothing collides, because the page never uses the native attribute name:</p>
+        <pre><code class="language-html">&lt;template id="nb-period"&gt;
+  &lt;input type="date" :value="start" :min="earliest"&gt;
+  &lt;input type="date" :value="end" :min="start"&gt;
+  &lt;button :disabled="locked"&gt;Apply&lt;/button&gt;
+&lt;/template&gt;</code></pre>
+        <pre><code class="language-javascript">period.start = '2024-01-01';   // the first input, and the minimum of the second
+period.end = '2025-12-31';
+period.locked = true;</code></pre>
+
+        <h3>Values</h3>
+        <ul>
+          <li><code>true</code> sets an attribute without a value (<code>disabled</code>), <code>false</code>, <code>null</code> and <code>undefined</code> remove it.</li>
+          <li><code>null</code> and <code>undefined</code> empty the text of an <code>nb-text</code> element.</li>
+          <li>On form fields, <code>:value</code>, <code>:checked</code> and <code>:selected</code> set the property, not the attribute. The attribute is only the starting value of a field, the property is what it shows.</li>
+          <li>On another component, a binding sets that component's property, so values can be any type (see <a href="#nested">Nested components</a>).</li>
+          <li>Reading a property gives back the last value that was set.</li>
+        </ul>
+
+        <h3>Text, not HTML</h3>
+        <p><code>nb-text</code> sets text. Markup in your data is shown as text, never run, so user input can't add elements or scripts to your page. Try it with the button in the example above. When you do want HTML, from a source you trust, use <code>nb-html</code>:</p>
+        <pre><code class="language-html">&lt;div nb-html="description"&gt;&lt;/div&gt;</code></pre>
+
+        <h3>Properties as attributes</h3>
+        <p>Every property can also be set as an attribute in the page's HTML. A camelCase property is a kebab-case attribute:</p>
+        <pre><code class="language-html">&lt;nb-period start="2024-01-01" end="2025-12-31" locked&gt;&lt;/nb-period&gt;</code></pre>
+        <pre><code class="language-javascript">period.setAttribute('start', '2024-06-01');   // the same as period.start = '2024-06-01'</code></pre>
+        <p>Attributes are always strings, properties keep their type. Use properties for numbers, arrays and objects.</p>
+
+        <h3>Before a component is defined</h3>
+        <p>A component file loads asynchronously. Properties set before that keep their value: NBHI applies them once the component is defined, so this works:</p>
+        <pre><code class="language-javascript">const card = document.createElement('nb-card');
+card.heading = 'Getting started';
+document.body.append(card);</code></pre>
+
+        <h3>What is not a property</h3>
+        <p>A component only has the properties its template binds. Every other attribute stays on the component element itself and does what it does on any element:</p>
+        <ul>
+          <li><code>hidden</code>, <code>class</code>, <code>id</code>, <code>style</code>, <code>title</code>, <code>slot</code>, <code>lang</code>, <code>dir</code>, <code>role</code>, <code>aria-*</code> and other global attributes apply to the component as a whole. <code>hidden</code> always hides it, also when its CSS sets <code>display</code>.</li>
+          <li><code>data-*</code> attributes stay yours, read them with <code>element.dataset</code>.</li>
+          <li>Attributes that only change the look need no binding. Select them in the component's CSS:</li>
+        </ul>
+        <pre><code class="language-css">:host([variant="success"]) { --badge-color: seagreen; }</code></pre>
+        <p>To pass one of these to an element inside, bind it: <code>&lt;input :aria-label="label"&gt;</code>.</p>
+        <p>A binding can't use a name that every element already has as a property, like <code>title</code>, <code>hidden</code>, <code>id</code> or <code>style</code>: NBHI throws when it defines the component. Use <code>nb-text="heading"</code> instead of <code>nb-text="title"</code>. In a list row this doesn't matter, as the bindings read from the record.</p>
+      </section>
+
+      <section id="nested">
+        <h2>Nested components</h2>
+        <p>A binding on a component inside a template sets that component's property. That is how a component passes a value on:</p>
+        <pre><code class="language-html">&lt;!-- /components/article-card.html --&gt;
+&lt;article&gt;
+  &lt;h3 nb-text="heading"&gt;&lt;/h3&gt;
+  &lt;p nb-text="author"&gt;&lt;/p&gt;
+  &lt;nb-badge :label="status"&gt;&lt;/nb-badge&gt;
+&lt;/article&gt;</code></pre>
+        <pre><code class="language-javascript">card.status = 'Draft';   // sets the label of the badge inside</code></pre>
+        <p>You set the outer property and the template passes it on. The page never reaches into a component.</p>
+
+        <div class="demo">
+          <nb-article-card class="articleCard" heading="Island hopping with templates" author="By Jane Doe" status="Draft"></nb-article-card>
+          <div class="controls">
+            <label>status
+              <select class="articleStatus">
+                <option>Draft</option>
+                <option>In review</option>
+                <option>Published</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section id="refs">
+        <h2>Refs</h2>
+        <p>Sometimes a page needs an element inside a component itself, for example to measure it or to hand it to a library. Name it with <code>nb-ref</code>:</p>
+        <pre><code class="language-html">&lt;template id="nb-map"&gt;
+  &lt;div nb-ref="canvas"&gt;&lt;/div&gt;
+&lt;/template&gt;</code></pre>
+        <pre><code class="language-javascript">new google.maps.Map(document.querySelector('nb-map').refs.canvas, { zoom: 8 });</code></pre>
+        <p><code>refs</code> is the way into a component. If you use it to change content or attributes, add a property instead.</p>
+      </section>
+
+      <section id="events">
+        <h2>Events</h2>
+        <p>Listen to a component the way you listen to a native element: add the listener to the component itself.</p>
+        <pre><code class="language-javascript">const select = document.querySelector('nb-select');
+
+select.addEventListener('change', () =&gt; {
+  console.log(select.value);
+});</code></pre>
+
+        <h3>Events from the elements inside</h3>
+        <p>When a user clicks, types or presses a key on an element inside a component, the event reaches the page as if the component itself fired it. <code>event.target</code> is the component, not the element inside, so the page never needs to know how the component is built.</p>
+        <p>The browser does this for most events, like <code>click</code>, <code>input</code> and <code>keydown</code>. It doesn't for <code>change</code>: that event stays inside the component. NBHI fires it again from the component, so <code>change</code> works like the others.</p>
+
+        <h3>Your own events</h3>
+        <p>A component's script can fire its own events. Dispatch them on the component element, with <code>bubbles: true</code> so that a listener on a parent hears them too:</p>
+        <pre><span class="fileName">/components/tag.html</span><code class="language-html">&lt;span nb-text="label"&gt;&lt;/span&gt;
+&lt;button nb-ref="remove"&gt;×&lt;/button&gt;
+
+&lt;script type="module"&gt;
+  export default element =&gt; {
+    element.refs.remove.addEventListener('click', () =&gt; {
+      element.dispatchEvent(new CustomEvent('remove', { bubbles: true, detail: { label: element.label } }));
+    });
+  };
+&lt;/script&gt;</code></pre>
+        <p>One listener on the parent handles every tag in it:</p>
+        <pre><code class="language-javascript">document.querySelector('.tags').addEventListener('remove', event =&gt; {
+  event.target.remove();
+});</code></pre>
+
+        <div class="demo">
+          <div class="tags">
+            <nb-tag label="coconut"></nb-tag>
+            <nb-tag label="lagoon"></nb-tag>
+            <nb-tag label="hammock"></nb-tag>
+          </div>
+          <form class="controls addTag">
+            <label>new tag <input class="tagName" placeholder="sunset" required></label>
+            <button type="submit" class="chip">Add tag</button>
+          </form>
+          <div class="log tagLog">Tags added here are new elements: NBHI defines them as they appear.</div>
+        </div>
+      </section>
+
+      <section id="lists">
+        <h2>Lists</h2>
+        <p><code>rows()</code> renders a list of records into an element. The first element in it is the template for a row:</p>
+        <pre><code class="language-html">&lt;table class="articles"&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;&lt;th&gt;Title&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;a :href="link" nb-text="title"&gt;&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;nb-badge :label="status"&gt;&lt;/nb-badge&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+        <pre><code class="language-javascript">import { rows } from 'nbhi';
+
+const table = document.querySelector('.articles');
+const articles = await fetch('/api/articles').then(response =&gt; response.json());
+
+rows(table, articles.map(({ id, title, status }) =&gt; ({
+  id,
+  title,
+  status,
+  link: `/articles/${ id }`,
+})));</code></pre>
+        <p>Call <code>rows()</code> again with new data whenever it changes, for example from a polling loop, a WebSocket or a realtime database listener. Inside a row, the bindings read from the record. The same bindings work as in a component: <code>nb-text</code>, <code>nb-html</code>, <code>:attribute</code> and bindings on components.</p>
+
+        <div class="demo">
+          <div class="tableWrapper">
+            <table class="articles">
+              <thead>
+                <tr><th>Title</th><th>Status</th><th>Your note</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><a :href="link" nb-text="title"></a></td>
+                  <td><nb-badge :label="status"></nb-badge></td>
+                  <td><input aria-label="Note" placeholder="Type, then shuffle"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="controls">
+            <button type="button" class="chip shuffle">Shuffle</button>
+            <button type="button" class="chip addArticle">Add an article</button>
+            <button type="button" class="chip removeArticle">Remove the first</button>
+          </div>
+          <div class="log">Type a note in a row and shuffle: the row keeps its element, so the note moves with it.</div>
+        </div>
+
+        <h3>Where the rows go</h3>
+        <div class="tableWrapper">
+          <table>
+            <thead>
+              <tr><th>Element</th><th>Rows</th><th>Template</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>&lt;table&gt;</code></td><td>the <code>&lt;tr&gt;</code>s of its <code>&lt;tbody&gt;</code></td><td>the first <code>&lt;tr&gt;</code> of the <code>&lt;tbody&gt;</code></td></tr>
+              <tr><td><code>&lt;ul&gt;</code>, <code>&lt;ol&gt;</code></td><td><code>&lt;li&gt;</code>s</td><td>the first <code>&lt;li&gt;</code></td></tr>
+              <tr><td><code>&lt;select&gt;</code></td><td><code>&lt;option&gt;</code>s</td><td>the first <code>&lt;option&gt;</code></td></tr>
+              <tr><td>any other element</td><td>its children</td><td>its first child</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>NBHI takes the template out of the page the first time and keeps it, so you write the row once in your HTML.</p>
+
+        <h3>Keeping rows</h3>
+        <p>Rows are matched to records by <code>id</code>. A record whose <code>id</code> was already shown keeps its element, even when it is a new object (as it is every time data is loaded again). The element is updated in place and moved when the order changes, so open details, a typed value and any element a test is holding all stay. Records without an <code>id</code> are matched by position.</p>
+        <p>Every call renders every record again, so a record that changed in place shows its new values. A key that is missing from a record empties its binding. Each element keeps its own list: calling <code>rows()</code> again on the same element, from anywhere, continues with the rows that are already there.</p>
+
+        <h3>Records that are strings or numbers</h3>
+        <p>A string or number is used as <code>{ id: value, value }</code>:</p>
+        <pre><code class="language-html">&lt;ul class="tags"&gt;&lt;li nb-text="value"&gt;&lt;/li&gt;&lt;/ul&gt;</code></pre>
+        <pre><code class="language-javascript">rows(document.querySelector('.tags'), ['html', 'css', 'javascript']);</code></pre>
+
+        <h3>Doing more per row</h3>
+        <p>For what a binding can't do, like an event listener, pass a function. It runs for every row after the bindings are applied:</p>
+        <pre><code class="language-javascript">rows(table, articles, (row, record) =&gt; {
+  row.querySelector('button').onclick = () =&gt; archive(record.id);
+});</code></pre>
+
+        <h3>Lists inside a component</h3>
+        <p>In a template, <code>nb-each</code> makes a property that takes a list:</p>
+        <pre><code class="language-html">&lt;template id="nb-select"&gt;
+  &lt;label&gt;
+    &lt;span nb-text="label"&gt;&lt;/span&gt;
+    &lt;select :value="value" nb-each="options"&gt;
+      &lt;option :value="value" nb-text="label"&gt;&lt;/option&gt;
+    &lt;/select&gt;
+  &lt;/label&gt;
+&lt;/template&gt;</code></pre>
+        <pre><code class="language-javascript">const select = document.querySelector('nb-select');
+select.label = 'Reviewer';
+select.options = users.map(({ id, name }) =&gt; ({ value: id, label: name }));
+select.value = 'u-123';</code></pre>
+        <p>Inside the row (here the <code>&lt;option&gt;</code>), the bindings read from each record. Outside it, they read from the component.</p>
+      </section>
+
+      <section id="forms">
+        <h2>Forms</h2>
+        <p>A component with an <code>&lt;input&gt;</code>, <code>&lt;select&gt;</code> or <code>&lt;textarea&gt;</code> is a form control. It works in a <code>&lt;form&gt;</code> like the field itself:</p>
+        <pre><code class="language-html">&lt;template id="nb-input"&gt;
+  &lt;label&gt;
+    &lt;span nb-text="label"&gt;&lt;/span&gt;
+    &lt;input :value="value" :required="required" :placeholder="placeholder"&gt;
+  &lt;/label&gt;
+&lt;/template&gt;
+
+&lt;form&gt;
+  &lt;nb-input name="title" label="Title" required&gt;&lt;/nb-input&gt;
+  &lt;button&gt;Save&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+        <pre><code class="language-javascript">const form = document.querySelector('form');
+const title = form.querySelector('nb-input');
+
+title.value = 'Getting started';    // shown in the input
+new FormData(form).get('title');    // 'Getting started'
+form.reportValidity();              // checks the input inside, shows its message</code></pre>
+
+        <div class="demo">
+          <form class="tripForm">
+            <nb-input name="name" label="Your name" placeholder="Jane Doe" required></nb-input>
+            <nb-input name="email" label="Email" type="email" placeholder="jane@example.com"></nb-input>
+            <nb-select name="island" label="Island" required></nb-select>
+            <div class="controls">
+              <button type="submit" class="button primary">Book the trip</button>
+              <button type="reset" class="chip">Reset</button>
+            </div>
+          </form>
+          <pre class="formOutput"><code class="language-json formData">Submit the form to see its FormData.</code></pre>
+        </div>
+
+        <ul>
+          <li><strong>The field:</strong> the element marked <code>nb-ref="field"</code>, or else the first <code>input</code>, <code>select</code> or <code>textarea</code>.</li>
+          <li><strong><code>name</code></strong> on the component is the name in the form.</li>
+          <li><strong><code>value</code></strong> on the component reads and sets the field. For a checkbox or radio, use <code>checked</code>.</li>
+          <li><strong>The form value</strong> is updated on every <code>input</code> and <code>change</code>, so <code>FormData</code> and submitting always have the current value.</li>
+          <li><strong>Validation:</strong> the field's own validity (<code>required</code>, <code>min</code>, <code>pattern</code>, <code>type="email"</code>, ...) is the component's validity, with the browser's messages. <code>checkValidity()</code>, <code>reportValidity()</code>, <code>validity</code> and <code>:invalid</code> work on the component.</li>
+          <li><strong>Reset:</strong> resetting the form puts the field back to its starting value.</li>
+          <li><strong>Disabled:</strong> a disabled <code>&lt;fieldset&gt;</code> disables the field.</li>
+          <li><strong>Focus:</strong> <code>component.focus()</code> focuses the field, and clicking its label does too.</li>
+        </ul>
+      </section>
+
+      <section id="reference">
+        <h2>Reference</h2>
+        <pre><code class="language-javascript">import { initialize, rows } from 'nbhi';</code></pre>
+        <div class="tableWrapper">
+          <table>
+            <thead>
+              <tr><th>Export</th><th>What it does</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>initialize({ prefix, source })</code></td><td>Defines the components in the page and loads the ones added later. Resolves when the components in the page are defined.</td></tr>
+              <tr><td><code>rows(element, records, each)</code></td><td>Renders <code>records</code> into <code>element</code>, matched by <code>id</code>. <code>each(row, record)</code> is optional.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>In templates:</p>
+        <div class="tableWrapper">
+          <table>
+            <thead>
+              <tr><th>Markup</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>&lt;template id="nb-name"&gt;</code></td><td>a component in the page</td></tr>
+              <tr><td><code>nb-text="name"</code></td><td>property <code>name</code> sets the text of this element</td></tr>
+              <tr><td><code>nb-html="name"</code></td><td>property <code>name</code> sets the HTML of this element</td></tr>
+              <tr><td><code>:attribute="name"</code></td><td>property <code>name</code> sets this attribute, or this property on form fields and components</td></tr>
+              <tr><td><code>nb-each="name"</code></td><td>property <code>name</code> takes a list, the first child is the row</td></tr>
+              <tr><td><code>nb-ref="name"</code></td><td><code>component.refs.name</code> is this element</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="upgrading">
+        <h2>Upgrading from 0.x</h2>
+        <div class="tableWrapper">
+          <table>
+            <thead>
+              <tr><th>0.x</th><th>Now</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Default prefix <code>db</code></td><td>Default prefix <code>nb</code>, pass <code>prefix: 'db'</code> to keep the old names</td></tr>
+              <tr><td><code>export default (element, importer) =&gt; {}</code> and <code>await importer('/path.js')</code></td><td><code>export default element =&gt; {}</code>, import your modules through the import map</td></tr>
+              <tr><td><code>&lt;template&gt;</code> without an id inside a component became <code>&lt;parent&gt;-child</code></td><td>Only a <code>&lt;template id="&lt;prefix&gt;-..."&gt;</code> is a component</td></tr>
+              <tr><td><code>update(element)('text')</code> on a plain element</td><td><code>element.textContent = 'text'</code></td></tr>
+              <tr><td><code>update(link)({ $href: url })</code> on a plain element</td><td><code>link.href = url</code></td></tr>
+              <tr><td><code>update(table)(records)</code></td><td><code>rows(table, records)</code></td></tr>
+              <tr><td><code>data-slot="name"</code> in a row</td><td><code>nb-text="name"</code></td></tr>
+              <tr><td><code>update(component)({ heading })</code>, which added <code>&lt;span slot="heading"&gt;</code> to the component</td><td><code>component.heading = heading</code>, with <code>nb-text="heading"</code> in the template instead of <code>&lt;slot name="heading"&gt;</code>. Slots now only take content the page writes in its HTML</td></tr>
+              <tr><td><code>update(component)({ $checked: true })</code></td><td><code>component.checked = true</code>, with <code>:checked="checked"</code> in the template</td></tr>
+              <tr><td>Attributes passed inward automatically</td><td>Bind them: <code>&lt;input :required="required"&gt;</code></td></tr>
+              <tr><td><code>validate(component)</code></td><td>Not needed: validity is kept up to date. Use <code>component.checkValidity()</code></td></tr>
+              <tr><td><code>onceVisible(element, callback)</code></td><td>Removed. Use an <a href="https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver"><code>IntersectionObserver</code></a></td></tr>
+              <tr><td><code>component.shadowRoot.querySelector(...)</code></td><td>A property, or <code>component.refs.name</code></td></tr>
+              <tr><td><code>[child]</code> element for lists in a component</td><td><code>nb-each="name"</code> on the list's parent</td></tr>
+              <tr><td>Values inserted as HTML</td><td>Values are text, use <code>nb-html</code> for HTML</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer>
+    <svg viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 0 L 1440 0 L 1440 22 C 1200 52, 960 8, 720 30 S 240 52, 0 24 Z" />
+    </svg>
+    <p>NBHI is MIT licensed. Made for building things without a build step.</p>
+    <p><a href="https://github.com/royniels/nbhi">GitHub</a> · <a href="https://www.npmjs.com/package/nbhi">npm</a></p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script type="module" src="./site/site.js"></script>
+
+</body>
+
+</html>

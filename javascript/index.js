@@ -1,11 +1,9 @@
-import { getAttributeMapping, updateAttributes } from './attributes.js';
-import update from './update.js';
-import validate from './validate.js';
-import onceVisible from './onceVisible.js';
+import { define } from './component.js';
+import { rows } from './render.js';
 
-export { initialize, update, validate, onceVisible };
+export { initialize, rows };
 
-async function initialize({ prefix = 'db', source = '/components' } = {}) {
+async function initialize({ prefix = 'nb', source = '/components' } = {}) {
   const registerCache = new Set();
   const fileCache = new Map();
 
@@ -13,33 +11,38 @@ async function initialize({ prefix = 'db', source = '/components' } = {}) {
     throw new Error('prefix option needs to be a string of at least one character');
   }
 
-  const inheritedStylesheets = getInheritedStylesheets();
-  inPage(document.querySelector('body'));
-  await fromFile(document.querySelector('body'));
+  const styleSheets = [...getInheritedStylesheets(), getHiddenStylesheet()];
+  const body = document.querySelector('body');
+  const observer = new MutationObserver(loadAdded);
+  inPage(body);
+  observer.observe(body, { childList: true, subtree: true });
+  await fromFile(body);
 
-  function inPage(root, parentId) {
+  function inPage(root) {
     root.querySelectorAll('template').forEach(template => {
-      if (!template.id && parentId) {
-        template.id = `${ parentId }-child`;
+      if (template.id.startsWith(`${ prefix }-`)) {
+        inPage(template.content);
+        register({ name: template.id, template });
       }
-
-      if (!template.id) {
-        console.log(template, parentId);
-        throw new Error('<template> is missing a mandatory id field');
-      }
-
-      inPage(template.content, template.id);
-      const name = template.id;
-      register({ name, template });
     });
   }
 
+  function loadAdded(mutations) {
+    mutations
+      .flatMap(mutation => [...mutation.addedNodes])
+      .filter(node => node.nodeType === Node.ELEMENT_NODE)
+      .forEach(node => {
+        fromElements([node, ...node.querySelectorAll('*')]).catch(error => console.error(error));
+      });
+  }
+
   function fromFile(root, ancestors = []) {
-    const names = [...root.querySelectorAll(':not(:defined)')]
-      .filter(element => {
-        const tagName = element.localName;
-        return element.nodeType === 1 && tagName.includes('-') && tagName.startsWith(prefix);
-      })
+    return fromElements([...root.querySelectorAll('*')], ancestors);
+  }
+
+  function fromElements(elements, ancestors = []) {
+    const names = elements
+      .filter(element => element.localName.startsWith(`${ prefix }-`) && element.matches(':not(:defined)'))
       .map(element => element.localName)
       .filter(name => !ancestors.includes(name));
 
@@ -58,23 +61,24 @@ async function initialize({ prefix = 'db', source = '/components' } = {}) {
       const html = await fetchFromFile(name);
       const template = document.createElement('template');
       template.content.append(...html.children);
-      const script = await copyScript(template);
+      const script = await importScript(template);
       await fromFile(template.content, [...ancestors, name]);
-      inPage(template.content, name);
+      inPage(template.content);
       register({ name, template, script });
 
-      function copyScript(template) {
+      async function importScript(template) {
         const script = template.content.querySelector('script');
-        return new Promise(async resolve => {
-          if (script) {
-            const blob = new Blob([script.textContent], { type: 'text/javascript' });
-            const blobUrl = URL.createObjectURL(blob);
-            resolve((await import(blobUrl)).default);
-            URL.revokeObjectURL(blobUrl);
-          } else {
-            resolve({});
-          }
-        });
+        if (!script) {
+          return null;
+        }
+        script.remove();
+        const blob = new Blob([script.textContent], { type: 'text/javascript' });
+        const blobUrl = URL.createObjectURL(blob);
+        try {
+          return (await import(blobUrl)).default;
+        } finally {
+          URL.revokeObjectURL(blobUrl);
+        }
       }
 
       async function fetchFromFile(name) {
@@ -92,48 +96,13 @@ async function initialize({ prefix = 'db', source = '/components' } = {}) {
     }
   }
 
-  function register({ name, template, script }) {
+  function register({ name, template, script = null }) {
     if (registerCache.has(name)) {
       return;
     }
-
     registerCache.add(name);
-
-    const isFormControl = !!template.content.querySelector('input, select, textarea');
-    const attributeMapping = getAttributeMapping(template.content);
-
-    customElements.define(name, class extends HTMLElement {
-      static observedAttributes = Object.keys(attributeMapping);
-      static formAssociated = isFormControl;
-      #shadow = null;
-
-      constructor() {
-        super();
-
-        const clone = document.importNode(template.content, true);
-        this.#shadow = this.attachShadow({ mode: 'open' });
-        this.#shadow.adoptedStyleSheets = inheritedStylesheets;
-        this.#shadow.appendChild(clone);
-
-        if (isFormControl) {
-          this.elementInternals = this.attachInternals();
-          this.formElement = this.#shadow.querySelector('input, select, textarea');
-        }
-      }
-
-      connectedCallback() {
-        if (typeof script === 'function') {
-          script(this, path => import(`${ window.location.origin }${ path }`));
-        }
-      }
-
-      attributeChangedCallback(name, oldValue, newValue) {
-        if (oldValue !== newValue) {
-          updateAttributes({ name, value: newValue, attributeMapping, root: this.#shadow });
-        }
-      }
-    });
-  };
+    define({ name, template, script, styleSheets, observer });
+  }
 
   function getInheritedStylesheets() {
     return Array.from(document.styleSheets)
@@ -144,10 +113,17 @@ async function initialize({ prefix = 'db', source = '/components' } = {}) {
           const cssText = Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n');
           newSheet.replaceSync(cssText);
         } catch (error) {
-          error;
-          console.error('Permission denied for sheet:', sheet.href);
+          console.error('Permission denied for sheet:', sheet.href, error);
         }
         return newSheet;
       });
   }
-};
+
+  // The browser hides [hidden] with a user agent style, which any display in
+  // the component's own CSS overrides
+  function getHiddenStylesheet() {
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(':host([hidden]) { display: none !important; }');
+    return sheet;
+  }
+}

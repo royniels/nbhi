@@ -1,0 +1,28 @@
+<article>
+  <h3 nb-text="heading">Heading</h3>
+  <!-- A standard web component slot, NBHI doesn't touch it -->
+  <slot></slot>
+</article>
+
+<style>
+  article {
+    background: var(--sand);
+    border: 1px solid var(--sand-2);
+    border-radius: 14px;
+    padding: 16px 18px;
+  }
+
+  h3 {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    margin: 0 0 6px;
+  }
+</style>
+
+<script type="module">
+  import logger from 'logger';
+
+  export default element => {
+    logger(`The card "${ element.heading }" is on the page`);
+  };
+</script>

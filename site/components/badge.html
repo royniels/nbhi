@@ -1,0 +1,22 @@
+<span nb-text="label"></span>
+
+<style>
+  span {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.6;
+    color: #fff;
+    background: var(--badge-color, var(--sea-3));
+    border-radius: 999px;
+    padding: 0 10px;
+  }
+
+  :host([variant="success"]) {
+    --badge-color: var(--palm);
+  }
+
+  :host([variant="warning"]) {
+    --badge-color: var(--mango);
+  }
+</style>

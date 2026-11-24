@@ -1,0 +1,25 @@
+<article>
+  <h3 nb-text="heading"></h3>
+  <p nb-text="author"></p>
+  <nb-badge :label="status"></nb-badge>
+</article>
+
+<style>
+  article {
+    background: var(--sand);
+    border: 1px solid var(--sand-2);
+    border-radius: 14px;
+    padding: 16px 18px;
+  }
+
+  h3 {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    margin: 0;
+  }
+
+  p {
+    color: var(--ink-soft);
+    margin: 0 0 10px;
+  }
+</style>
