@@ -176,18 +176,19 @@ code {
 .heroCoast {
   bottom: 0;
   height: var(--coast-height);
-  background-image: url('art/coast-day.svg');
+  background-image: url('art/islands-day.svg'), url('art/sea-day.svg');
+  background-repeat: no-repeat, repeat-x;
   background-position: center bottom;
   background-size: auto 100%;
 }
 
 .heroCanopy {
   top: 0;
-  height: 640px;
+  height: clamp(300px, 39vw, 600px);
   z-index: 2;
-  background-image: url('art/canopy-day.svg');
-  background-position: top center;
-  background-size: max(100%, 1100px) auto;
+  background-image: url('art/canopy-left-day.svg'), url('art/canopy-right-day.svg');
+  background-position: left top, right top;
+  background-size: auto 100%;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -196,11 +197,11 @@ code {
   }
 
   :root:not([data-theme="light"]) .heroCoast {
-    background-image: url('art/coast-night.svg');
+    background-image: url('art/islands-night.svg'), url('art/sea-night.svg');
   }
 
   :root:not([data-theme="light"]) .heroCanopy {
-    background-image: url('art/canopy-night.svg');
+    background-image: url('art/canopy-left-night.svg'), url('art/canopy-right-night.svg');
   }
 }
 
@@ -209,11 +210,11 @@ code {
 }
 
 :root[data-theme="dark"] .heroCoast {
-  background-image: url('art/coast-night.svg');
+  background-image: url('art/islands-night.svg'), url('art/sea-night.svg');
 }
 
 :root[data-theme="dark"] .heroCanopy {
-  background-image: url('art/canopy-night.svg');
+  background-image: url('art/canopy-left-night.svg'), url('art/canopy-right-night.svg');
 }
 
 .topBar {
@@ -690,10 +691,6 @@ footer p {
 
   .heroText {
     padding-bottom: 230px;
-  }
-
-  .heroCanopy {
-    height: 420px;
   }
 
   .layout {

@@ -49,9 +49,12 @@ const palettes = {
 const folder = import.meta.dirname;
 
 for (const [theme, colors] of Object.entries(palettes)) {
-  write(`canopy-${ theme }.svg`, drawCanopy(colors));
+  const canopy = drawCanopy(colors);
+  write(`canopy-left-${ theme }.svg`, canopy.left);
+  write(`canopy-right-${ theme }.svg`, canopy.right);
   write(`clouds-${ theme }.svg`, drawClouds(colors));
-  write(`coast-${ theme }.svg`, drawCoast(colors, theme));
+  write(`sea-${ theme }.svg`, drawSea(colors, theme));
+  write(`islands-${ theme }.svg`, drawIslands(colors));
 }
 write('stars.svg', drawStars());
 
@@ -72,8 +75,8 @@ function round(value) {
   return Math.round(value * 10) / 10;
 }
 
-function svg(width, height, content) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ width } ${ height }" width="${ width }" height="${ height }">${ content }</svg>\n`;
+function svg(width, height, content, left = 0) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${ left } 0 ${ width } ${ height }" width="${ width }" height="${ height }">${ content }</svg>\n`;
 }
 
 function pick(random, list) {
@@ -112,11 +115,19 @@ function drawCanopy(colors) {
     { x: 1700, y: -20, angle: 158, length: 640, layer: 'front' },
   ];
 
-  const content = ['back', 'mid', 'front'].map(layer => {
-    return fronds.filter(frond => frond.layer === layer).map(frond => drawFrond({ ...frond, y: frond.y - lift })).join('');
+  // Each half is pinned to its own edge of the screen, so wide screens show
+  // more sky in the middle instead of stretched leaves
+  const half = side => ['back', 'mid', 'front'].map(layer => {
+    return fronds
+      .filter(frond => frond.layer === layer && (frond.x < width / 2) === (side === 'left'))
+      .map(frond => drawFrond({ ...frond, y: frond.y - lift }))
+      .join('');
   }).join('');
 
-  return svg(width, height, content);
+  return {
+    left: svg(1000, height, half('left')),
+    right: svg(1000, height, half('right'), width - 1000),
+  };
 
   function drawFrond({ x, y, angle, length, layer }) {
     const radians = angle * Math.PI / 180;
@@ -302,51 +313,84 @@ function drawClouds(colors) {
   }
 }
 
-// The sea from the horizon (y 120) to the beach, with islands on the horizon
-function drawCoast(colors, theme) {
+// The sea and beach from the horizon (y 120) down, drawn so that the strip
+// repeats seamlessly sideways on screens of any width
+function drawSea(colors, theme) {
   const random = seeded(37);
   const width = 2400;
   const height = 340;
   const horizon = 120;
   const shore = 262;
-  const glitterX = 1740;
-  const definitions = [];
-  const back = [];
-  const front = [];
-
-  definitions.push(gradient('sea', [[0, colors.sea.horizon], [0.45, colors.sea.middle], [1, colors.sea.near]], horizon, shore + 20));
-  definitions.push(gradient('sand', [[0, colors.shore.sand], [0.5, colors.shore.sand], [1, colors.shore.paper]], shore, height));
-  definitions.push(gradient('shallow', [[0, colors.sea.shallow, 0], [1, colors.sea.shallow, 0.75]], shore - 30, shore));
-
-  back.push(`<rect x="0" y="${ horizon }" width="${ width }" height="${ height - horizon }" fill="url(#sea)"/>`);
-  back.push(`<rect x="0" y="${ horizon - 1 }" width="${ width }" height="5" fill="#ffffff" opacity="${ theme === 'day' ? 0.25 : 0.08 }"/>`);
-
-  const islands = [
-    { x: 1180, width: 400, height: 68 },
-    { x: 1820, width: 720, height: 114 },
+  const definitions = [
+    gradient('sea', [[0, colors.sea.horizon], [0.45, colors.sea.middle], [1, colors.sea.near]], horizon, shore + 20),
+    gradient('sand', [[0, colors.shore.sand], [0.5, colors.shore.sand], [1, colors.shore.paper]], shore, height),
+    gradient('shallow', [[0, colors.sea.shallow, 0], [1, colors.sea.shallow, 0.75]], shore - 30, shore),
   ];
-  islands.forEach(island => drawIsland(island));
-  drawGlints();
+  const parts = [
+    `<rect x="0" y="${ horizon }" width="${ width }" height="${ height - horizon }" fill="url(#sea)"/>`,
+    `<rect x="0" y="${ horizon - 1 }" width="${ width }" height="5" fill="#ffffff" opacity="${ theme === 'day' ? 0.25 : 0.08 }"/>`,
+  ];
 
-  front.push(`<path d="${ wave(shore - 28, 6, 0) } L ${ width } ${ shore + 10 } L 0 ${ shore + 10 } Z" fill="url(#shallow)"/>`);
-  front.push(`<path d="${ wave(shore, 7, 0.4) } L ${ width } ${ height } L 0 ${ height } Z" fill="${ colors.shore.wet }"/>`);
-  front.push(`<path d="${ wave(shore + 9, 7, 0.4) } L ${ width } ${ height } L 0 ${ height } Z" fill="url(#sand)"/>`);
-  front.push(`<path d="${ wave(shore, 7, 0.4) }" fill="none" stroke="${ colors.shore.foam }" stroke-width="3" stroke-linecap="round"/>`);
-  front.push(`<path d="${ wave(shore - 10, 4, 1.3) }" fill="none" stroke="${ colors.shore.foam }" stroke-width="5" opacity="0.18" stroke-linecap="round"/>`);
-
-  return svg(width, height, `<defs>${ definitions.join('') }</defs>${ back.join('') }${ front.join('') }`);
-
-  function gradient(id, stops, y1, y2) {
-    return `<linearGradient id="${ id }" gradientUnits="userSpaceOnUse" x1="0" y1="${ y1 }" x2="0" y2="${ y2 }">${ stops.map(([offset, color, opacity = 1]) => `<stop offset="${ offset }" stop-color="${ color }" stop-opacity="${ opacity }"/>`).join('') }</linearGradient>`;
+  const streaks = [];
+  for (let i = 0; i < 70; i++) {
+    const depth = Math.pow(random(), 1.5);
+    const y = horizon + 3 + depth * (shore - horizon - 36);
+    const length = 40 + depth * 260 * random();
+    const x = random() * (width - length);
+    streaks.push(`<path d="M${ round(x) } ${ round(y) }h${ round(length) }" stroke-width="${ round(0.6 + depth * 1.2) }" opacity="${ round(0.06 + random() * 0.14) }"/>`);
   }
+  parts.push(`<g stroke="${ colors.sea.glint }" stroke-linecap="round">${ streaks.join('') }</g>`);
 
+  parts.push(`<path d="${ wave(shore - 28, 6, 0) } L ${ width } ${ shore + 10 } L 0 ${ shore + 10 } Z" fill="url(#shallow)"/>`);
+  parts.push(`<path d="${ wave(shore, 7, 0.4) } L ${ width } ${ height } L 0 ${ height } Z" fill="${ colors.shore.wet }"/>`);
+  parts.push(`<path d="${ wave(shore + 9, 7, 0.4) } L ${ width } ${ height } L 0 ${ height } Z" fill="url(#sand)"/>`);
+  parts.push(`<path d="${ wave(shore, 7, 0.4) }" fill="none" stroke="${ colors.shore.foam }" stroke-width="3" stroke-linecap="round"/>`);
+  parts.push(`<path d="${ wave(shore - 10, 4, 1.3) }" fill="none" stroke="${ colors.shore.foam }" stroke-width="5" opacity="0.18" stroke-linecap="round"/>`);
+
+  return svg(width, height, `<defs>${ definitions.join('') }</defs>${ parts.join('') }`);
+
+  // Whole numbers of waves fit in the width, so the left and right edge meet
   function wave(y, amplitude, phase) {
     const points = [];
-    for (let x = 0; x <= width; x += 40) {
-      points.push(`${ x } ${ round(y + Math.sin(x / 190 + phase) * amplitude + Math.sin(x / 67 + phase * 2) * amplitude * 0.35) }`);
+    for (let x = 0; x <= width; x += 10) {
+      const angle = x / width * Math.PI * 2;
+      points.push(`${ x } ${ round(y + Math.sin(angle * 6 + phase) * amplitude + Math.sin(angle * 17 + phase * 2) * amplitude * 0.3) }`);
     }
     return `M${ points.join(' L') }`;
   }
+}
+
+// The islands in front and, at night, the path of moonlight on the water.
+// This layer is centred, the sea repeats behind it
+function drawIslands(colors) {
+  const random = seeded(53);
+  const width = 2400;
+  const height = 340;
+  const horizon = 120;
+  const shore = 262;
+  const moonX = 1740;
+  const definitions = [];
+  const parts = [];
+
+  [
+    { x: 1180, width: 400, height: 68 },
+    { x: 1820, width: 720, height: 114 },
+  ].forEach(island => drawIsland(island));
+
+  if (colors.moonPath) {
+    const glints = [];
+    for (let i = 0; i < 60; i++) {
+      const depth = Math.pow(random(), 1.3);
+      const y = horizon + 3 + depth * (shore - horizon - 30);
+      const spread = 10 + depth * 90;
+      const length = 6 + depth * 34 * random();
+      const x = moonX + (random() - 0.5) * spread * 2 - length / 2;
+      glints.push(`<path d="M${ round(x) } ${ round(y) }h${ round(length) }" stroke-width="${ round(0.8 + depth * 1.6) }" opacity="${ round(0.3 + random() * 0.45) }"/>`);
+    }
+    parts.push(`<g stroke="${ colors.sea.glint }" stroke-linecap="round">${ glints.join('') }</g>`);
+  }
+
+  return svg(width, height, `<defs>${ definitions.join('') }</defs>${ parts.join('') }`);
 
   // A volcanic island like the ones in the back, closer and darker: the left
   // flank catches the light, the right flank is in shade
@@ -360,44 +404,24 @@ function drawCoast(colors, theme) {
     definitions.push(gradient(id, [[0, topColor], [1, baseColor]], round(top), horizon));
     definitions.push(gradient(`${ id }Shade`, [[0, colors.island.frontShadow, 0.75], [1, colors.island.frontShadow, 0.35]], round(top), horizon));
 
-    back.push(`<path d="${ outline }" fill="url(#${ id })"/>`);
+    parts.push(`<path d="${ outline }" fill="url(#${ id })"/>`);
 
     const flank = ridge.slice(peakIndex);
     const foot = ridge[peakIndex][0] + baseWidth * 0.06;
-    back.push(`<path d="M${ flank.map(([pointX, pointY]) => `${ round(pointX) } ${ round(pointY) }`).join(' L') } L${ round(foot) } ${ horizon } Z" fill="url(#${ id }Shade)"/>`);
+    parts.push(`<path d="M${ flank.map(([pointX, pointY]) => `${ round(pointX) } ${ round(pointY) }`).join(' L') } L${ round(foot) } ${ horizon } Z" fill="url(#${ id }Shade)"/>`);
 
     const litSide = ridge.slice(0, peakIndex + 1).filter(([, pointY]) => horizon - pointY > 3);
-    back.push(`<path d="M${ litSide.map(([pointX, pointY]) => `${ round(pointX) } ${ round(pointY + 1.5) }`).join(' L') }" fill="none" stroke="${ colors.island.frontLight }" stroke-width="2" opacity="0.45" stroke-linejoin="round"/>`);
+    parts.push(`<path d="M${ litSide.map(([pointX, pointY]) => `${ round(pointX) } ${ round(pointY + 1.5) }`).join(' L') }" fill="none" stroke="${ colors.island.frontLight }" stroke-width="2" opacity="0.45" stroke-linejoin="round"/>`);
 
     const beachStart = x - baseWidth * 0.36;
     const beachEnd = x + baseWidth * 0.4;
-    back.push(`<path d="M${ round(beachStart) } ${ horizon } Q${ round(x) } ${ horizon - 4 } ${ round(beachEnd) } ${ horizon } Z" fill="${ colors.island.beach }"/>`);
-    back.push(`<path d="M${ round(beachStart - 10) } ${ horizon + 1 } L${ round(beachEnd + 10) } ${ horizon + 1 }" stroke="${ colors.island.surf }" stroke-width="1.2" opacity="0.8"/>`);
+    parts.push(`<path d="M${ round(beachStart) } ${ horizon } Q${ round(x) } ${ horizon - 4 } ${ round(beachEnd) } ${ horizon } Z" fill="${ colors.island.beach }"/>`);
+    parts.push(`<path d="M${ round(beachStart - 10) } ${ horizon + 1 } L${ round(beachEnd + 10) } ${ horizon + 1 }" stroke="${ colors.island.surf }" stroke-width="1.2" opacity="0.8"/>`);
   }
+}
 
-  // Faint long streaks of light instead of individual glints, and a path of
-  // moonlight at night
-  function drawGlints() {
-    const streaks = [];
-    for (let i = 0; i < 70; i++) {
-      const depth = Math.pow(random(), 1.5);
-      const y = horizon + 3 + depth * (shore - horizon - 36);
-      const length = 40 + depth * 260 * random();
-      const x = random() * width;
-      streaks.push(`<path d="M${ round(x) } ${ round(y) }h${ round(length) }" stroke-width="${ round(0.6 + depth * 1.2) }" opacity="${ round(0.06 + random() * 0.14) }"/>`);
-    }
-    if (colors.moonPath) {
-      for (let i = 0; i < 60; i++) {
-        const depth = Math.pow(random(), 1.3);
-        const y = horizon + 3 + depth * (shore - horizon - 30);
-        const spread = 10 + depth * 90;
-        const length = 6 + depth * 34 * random();
-        const x = glitterX + (random() - 0.5) * spread * 2 - length / 2;
-        streaks.push(`<path d="M${ round(x) } ${ round(y) }h${ round(length) }" stroke-width="${ round(0.8 + depth * 1.6) }" opacity="${ round(0.3 + random() * 0.45) }"/>`);
-      }
-    }
-    back.push(`<g stroke="${ colors.sea.glint }" stroke-linecap="round">${ streaks.join('') }</g>`);
-  }
+function gradient(id, stops, y1, y2) {
+  return `<linearGradient id="${ id }" gradientUnits="userSpaceOnUse" x1="0" y1="${ y1 }" x2="0" y2="${ y2 }">${ stops.map(([offset, color, opacity = 1]) => `<stop offset="${ offset }" stop-color="${ color }" stop-opacity="${ opacity }"/>`).join('') }</linearGradient>`;
 }
 
 function drawStars() {
