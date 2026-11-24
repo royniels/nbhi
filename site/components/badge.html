@@ -3,20 +3,12 @@
 <style>
   span {
     display: inline-block;
-    font-size: 0.8rem;
-    font-weight: 600;
-    line-height: 1.6;
+    font-size: 1rem;
+    line-height: 1.5;
     color: #fff;
-    background: var(--badge-color, var(--sea-3));
-    border-radius: 999px;
+    background: var(--badge-color, var(--sea-deep));
+    border: 2px solid var(--line);
+    border-radius: var(--wobbly);
     padding: 0 10px;
-  }
-
-  :host([variant="success"]) {
-    --badge-color: var(--palm);
-  }
-
-  :host([variant="warning"]) {
-    --badge-color: var(--mango);
   }
 </style>

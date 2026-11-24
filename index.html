@@ -29,7 +29,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=JetBrains+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Patrick+Hand&family=JetBrains+Mono:wght@400;600&display=swap">
   <link rel="stylesheet" href="./site/style.css">
 </head>
 
@@ -55,31 +55,14 @@
           <a class="button secondary" href="#properties">See it work</a>
         </div>
       </div>
-
-      <div class="island" aria-hidden="true">
-        <div class="sun"></div>
-        <svg class="palm" viewBox="0 0 200 270" xmlns="http://www.w3.org/2000/svg">
-          <ellipse class="mound" cx="108" cy="262" rx="86" ry="18" />
-          <path class="trunk" d="M120 258 C 116 205, 98 150, 101 94" stroke-width="13" stroke-linecap="round" fill="none" />
-          <g class="fronds">
-            <path class="frond back" d="M101 92 C 84 56, 58 40, 30 44 C 60 56, 80 72, 99 98 Z" />
-            <path class="frond back" d="M101 92 C 120 54, 148 40, 176 46 C 148 56, 124 72, 103 98 Z" />
-            <path class="frond" d="M101 92 C 70 70, 38 80, 14 114 C 44 94, 72 92, 101 99 Z" />
-            <path class="frond" d="M101 92 C 132 68, 168 76, 192 110 C 162 92, 134 92, 101 99 Z" />
-            <path class="frond" d="M101 92 C 99 62, 106 36, 122 18 C 114 46, 110 68, 105 96 Z" />
-            <circle class="coconut" cx="96" cy="101" r="6" />
-            <circle class="coconut" cx="107" cy="103" r="6" />
-          </g>
-        </svg>
-      </div>
     </div>
 
-    <svg class="waves" viewBox="0 0 1440 150" preserveAspectRatio="none" aria-hidden="true">
-      <path class="wave1" d="M0 60 C 180 20, 360 100, 540 60 S 900 20, 1080 60 S 1320 100, 1500 60 L 1500 150 L 0 150 Z" />
-      <path class="wave2" d="M0 85 C 200 50, 400 120, 600 85 S 1000 50, 1200 85 S 1400 110, 1500 90 L 1500 150 L 0 150 Z" />
-      <path class="wave3" d="M0 108 C 240 84, 480 132, 720 108 S 1200 84, 1440 108 L 1440 150 L 0 150 Z" />
-      <path class="shore" d="M0 130 C 240 118, 480 142, 720 130 S 1200 118, 1440 130 L 1440 150 L 0 150 Z" />
-    </svg>
+    <div class="heroArt" aria-hidden="true">
+      <div class="heroStars"></div>
+      <div class="heroClouds"></div>
+      <div class="heroCoast"></div>
+      <div class="heroCanopy"></div>
+    </div>
   </header>
 
   <div class="layout">
@@ -201,7 +184,7 @@
             }
 
             strong {
-              color: var(--coral);
+              color: var(--accent);
             }
           </style>
         </template>
@@ -253,15 +236,17 @@ author.link = '/authors/jane-doe';</code></pre>
           <style>
             :host {
               display: block;
-              background: var(--sand);
-              border: 1px solid var(--sand-2);
-              border-radius: 14px;
-              padding: 16px 18px;
+              background: var(--paper);
+              border: 2px solid var(--line);
+              border-radius: var(--wobbly);
+              box-shadow: var(--shadow);
+              padding: 14px 18px;
             }
 
             h3 {
               font-family: var(--font-display);
-              font-size: 1.25rem;
+              font-weight: 400;
+              font-size: 1.8rem;
               margin: 0;
             }
 

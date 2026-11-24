@@ -30,7 +30,9 @@
   "author": "Roy Niels",
   "type": "module",
   "scripts": {
-    "test": "playwright test"
+    "test": "playwright test",
+    "site": "node site/serve.js",
+    "art": "node site/art/draw.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0"
