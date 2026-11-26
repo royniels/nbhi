@@ -1,18 +1,22 @@
 {
   "name": "nbhi",
   "version": "1.0.0",
-  "description": "No-Build HTML Includes (NBHI) turns HTML templates, in their own files or in the page, into web components. The template's bindings become properties, rows() renders lists, and a component with a form field is a real form control. No build tools required.",
+  "description": "Web components from plain HTML templates, without build tools. Bindings in a template become properties, rows() renders lists, and a component with a form field is a real form control.",
   "keywords": [
     "web-components",
+    "custom-elements",
+    "html-templates",
     "html-includes",
     "no-build",
+    "buildless",
     "data-binding",
+    "list-rendering",
     "form-associated",
-    "mpa",
-    "multi-page-application",
-    "composable"
+    "form-controls",
+    "shadow-dom",
+    "vanilla-js"
   ],
-  "homepage": "https://github.com/royniels/nbhi#readme",
+  "homepage": "https://royniels.github.io/nbhi/",
   "bugs": {
     "url": "https://github.com/royniels/nbhi/issues"
   },
