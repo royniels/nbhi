@@ -1,6 +1,6 @@
 {
   "name": "nbhi",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Web components from plain HTML templates, without build tools. Bindings in a template become properties, rows() renders lists, and a component with a form field is a real form control.",
   "keywords": [
     "web-components",

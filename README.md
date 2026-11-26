@@ -19,7 +19,7 @@ No build step is needed. Map the package in an import map and import it in a mod
 
 ```html
 <script type="importmap">
-  { "imports": { "nbhi": "https://cdn.jsdelivr.net/npm/nbhi@1.0.0/javascript/index.js" } }
+  { "imports": { "nbhi": "https://cdn.jsdelivr.net/npm/nbhi@1.0.1/javascript/index.js" } }
 </script>
 
 <script type="module">
@@ -89,7 +89,7 @@ The script's default export runs with the element. Its imports go through the pa
 <script type="importmap">
   {
     "imports": {
-      "nbhi": "https://cdn.jsdelivr.net/npm/nbhi@1.0.0/javascript/index.js",
+      "nbhi": "https://cdn.jsdelivr.net/npm/nbhi@1.0.1/javascript/index.js",
       "date-fns": "https://esm.sh/date-fns@4.1.0",
       "articles": "/javascript/articles.js"
     }
